@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WasaPedro P2P - Fijo</title>
+    <title>WasaPedro Real-Time Fijo</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
 </head>
 <body class="h-screen w-screen flex flex-col items-center justify-center p-4 bg-[#0b141a] text-[#e9edef] font-family: sans-serif;">
 
     <div id="pantalla-registro" class="bg-[#111b21] p-8 rounded-2xl shadow-2xl border border-[#222e35] max-w-sm w-full text-center">
         <h1 class="text-3xl font-extrabold text-[#00a884] mb-2">WasaPedro</h1>
-        <p class="text-gray-400 text-sm mb-6">Ingresa tu nombre para generar tu ID de red.</p>
+        <p class="text-gray-400 text-sm mb-6">Ingresa tu nombre para conectarte a la red global.</p>
         <input type="text" id="input-nombre" placeholder="Tu nombre..." class="w-full bg-[#2a3942] border-none text-white rounded-lg p-3 mb-4 focus:outline-none focus:ring-2 focus:ring-[#00a884]">
         <button id="btn-guardar" class="w-full bg-[#00a884] hover:bg-[#008f72] text-[#111b21] font-bold p-3 rounded-lg transition">Ingresar a WasaPedro</button>
     </div>
@@ -24,48 +24,39 @@
                     <div class="w-10 h-10 bg-[#00a884] text-[#111b21] font-bold rounded-full flex items-center justify-center text-lg" id="avatar-usuario">?</div>
                     <span id="nombre-usuario-pantalla" class="font-medium text-sm">...</span>
                 </div>
-                <div class="text-[11px] text-gray-400 mt-2 bg-[#111b21] p-2 rounded border border-[#222e35]">
-                    Mi ID de conexión: <span id="mi-id-display" class="font-mono text-[#00a884] select-all font-bold">Cargando...</span>
-                </div>
             </div>
 
             <div class="p-3 bg-[#111b21] border-b border-[#222e35]">
                 <div class="flex flex-col gap-2 bg-[#202d33] rounded-lg p-2">
-                    <input type="text" id="input-buscar" placeholder="Pegar ID de tu amigo..." class="bg-transparent text-xs w-full focus:outline-none text-white placeholder-gray-400">
-                    <button id="btn-buscar" class="bg-[#00a884] text-[#111b21] text-xs font-bold py-1 px-2 rounded w-full">Conectar con Amigo</button>
+                    <input type="text" id="input-buscar" placeholder="Escribe el nombre de tu amigo..." class="bg-transparent text-xs w-full focus:outline-none text-white placeholder-gray-400">
+                    <button id="btn-buscar" class="bg-[#00a884] text-[#111b21] text-xs font-bold py-1 px-2 rounded w-full">Buscar y Chatear</button>
                 </div>
             </div>
 
             <div class="p-4 border-b border-[#222e35] bg-[#182229]">
-                <h2 class="text-xs font-bold tracking-wider text-gray-400 uppercase mb-2">Buzón de Conexión</h2>
+                <h2 class="text-xs font-bold tracking-wider text-gray-400 uppercase mb-2">Estado de Red</h2>
                 <div id="lista-solicitudes" class="space-y-2 text-xs text-gray-400">
-                    <p id="estado-red" class="italic text-[#00a884]">Esperando que te conectes...</p>
+                    <p id="estado-red" class="italic text-[#00a884]">Conectando al servidor...</p>
                 </div>
             </div>
 
             <div class="flex-1 overflow-y-auto p-2 space-y-1" id="lista-amigos">
                 <h2 class="text-xs font-bold tracking-wider text-gray-400 uppercase p-2">Chats Activos</h2>
-                <div id="amigo-item" class="hidden flex items-center gap-3 p-3 rounded-lg cursor-pointer bg-[#2a3942] hover:bg-[#202d33]">
-                    <div class="w-10 h-10 bg-[#00a884] text-black font-bold rounded-full flex items-center justify-center text-sm" id="avatar-lista-amigo">A</div>
-                    <div class="text-sm font-medium flex-1">
-                        <div id="nombre-lista-amigo">Amigo Conectado</div>
-                        <div class="text-xs text-[#00a884]">Haz clic aquí para escribir</div>
-                    </div>
-                </div>
+                <div id="contenedor-lista-dinamica" class="space-y-1"></div>
             </div>
         </div>
 
         <div class="flex-1 flex flex-col bg-[#222e35] bg-opacity-20" id="pantalla-chat-vacia">
             <div class="m-auto text-center max-w-sm">
-                <h3 class="text-xl font-semibold text-gray-300">WasaPedro Directo</h3>
-                <p class="text-sm text-gray-500 mt-2">Pásale tu "ID de conexión" a tu amigo o pega el de él para abrir el canal directo.</p>
+                <h3 class="text-xl font-semibold text-gray-300">WasaPedro Cloud</h3>
+                <p class="text-sm text-gray-500 mt-2">Busca a tu amigo por su nombre exacto en la barra lateral para empezar a enviarse mensajes.</p>
             </div>
         </div>
 
         <div class="flex-1 flex flex-col bg-[#0b141a] hidden" id="pantalla-chat-activa">
             <div class="p-4 bg-[#202d33] flex items-center gap-3 border-b border-[#222e35]">
-                <div class="w-9 h-9 bg-[#00a884] text-black font-bold rounded-full flex items-center justify-center text-sm" id="avatar-chat">A</div>
-                <span id="nombre-chat-amigo" class="font-medium text-sm">Mi Amigo</span>
+                <div class="w-9 h-9 bg-[#00a884] text-black font-bold rounded-full flex items-center justify-center text-sm" id="avatar-chat">?</div>
+                <span id="nombre-chat-amigo" class="font-medium text-sm">...</span>
             </div>
             <div class="flex-1 overflow-y-auto p-4 space-y-3" id="contenedor-mensajes"></div>
             <div class="p-4 bg-[#202d33] flex gap-3 items-center">
@@ -77,21 +68,21 @@
     </div>
 
     <script>
-        let miNombre = localStorage.getItem("wasapedro_p2p_name");
-        let peer = null;
-        let conexionActiva = null;
-        let nombreAmigoConectado = "Amigo Conectado";
+        let miNombre = localStorage.getItem("wasapedro_mqtt_name") || "";
+        let clienteMqtt = null;
+        let chatActivo = null;
+        let listaAmigosActivos = JSON.parse(localStorage.getItem("wasapedro_amigos_list")) || [];
 
         if (miNombre) {
             document.getElementById("input-nombre").value = miNombre;
         }
 
         document.getElementById("btn-guardar").addEventListener("click", () => {
-            const nombre = document.getElementById("input-nombre").value.trim();
+            const nombre = document.getElementById("input-nombre").value.trim().toLowerCase();
             if (nombre.length < 2) return alert("Nombre muy corto.");
             
             miNombre = nombre;
-            localStorage.setItem("wasapedro_p2p_name", miNombre);
+            localStorage.setItem("wasapedro_mqtt_name", miNombre);
             
             document.getElementById("pantalla-registro").classList.add("hidden");
             document.getElementById("interfaz-principal").classList.remove("hidden");
@@ -99,86 +90,109 @@
             document.getElementById("nombre-usuario-pantalla").textContent = miNombre;
             document.getElementById("avatar-usuario").textContent = miNombre.charAt(0).toUpperCase();
             
-            inicializarP2P();
+            conectarServidorCloud();
         });
 
-        function inicializarP2P() {
-            const idGenerado = miNombre.replace(/\s+/g, '') + "-" + Math.floor(1000 + Math.random() * 9000);
-            peer = new Peer(idGenerado);
+        // --- CONEXIÓN AL SERVIDOR EN LA NUBE ---
+        function conectarServidorCloud() {
+            // Usamos el broker público y gratuito de HiveMQ sobre WebSockets seguros (ideal para GitHub Pages)
+            clienteMqtt = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
 
-            peer.on('open', (id) => {
-                document.getElementById("mi-id-display").textContent = id;
-                document.getElementById("estado-red").textContent = "Listo. Esperando conexión...";
+            clienteMqtt.on('connect', () => {
+                document.getElementById("estado-red").textContent = "Conectado a la red de WasaPedro ✔";
+                
+                // Nos suscribimos a nuestro propio canal exclusivo para recibir mensajes dirigidos a nosotros
+                clienteMqtt.subscribe(`wasapedro/chat/${miNombre}`, (err) => {
+                    if (!err) console.log("Suscrito con éxito a mis mensajes.");
+                });
+                
+                actualizarListaAmigosUI();
             });
 
-            // Si alguien se conecta a nosotros
-            peer.on('connection', (conn) => {
-                conexionActiva = conn;
-                document.getElementById("estado-red").textContent = "¡Amigo conectado con éxito!";
-                forzarAperturaChat();
-                configurarCanalChat();
+            clienteMqtt.on('message', (topico, mensaje) => {
+                const data = JSON.parse(mensaje.toString());
+                
+                // Si recibimos un mensaje de texto
+                if (data.emisor && data.texto) {
+                    // Si no teníamos a este amigo en la lista, lo agregamos automáticamente con su nombre real
+                    if (!listaAmigosActivos.includes(data.emisor)) {
+                        listaAmigosActivos.push(data.emisor);
+                        localStorage.setItem("wasapedro_amigos_list", JSON.stringify(listaAmigosActivos));
+                        actualizarListaAmigosUI();
+                    }
+                    
+                    // Si tenemos el chat abierto con él, lo pintamos de inmediato
+                    if (chatActivo === data.emisor) {
+                        dibujarBurbuja(data.texto, false);
+                    } else {
+                        document.getElementById("estado-red").textContent = `¡Mensaje nuevo de ${data.emisor}!`;
+                    }
+                }
             });
         }
 
-        // Si nosotros nos conectamos a un amigo
+        // --- BUSCAR Y AGREGAR UN AMIGO POR SU NOMBRE REAL ---
         document.getElementById("btn-buscar").addEventListener("click", () => {
-            const idDestino = document.getElementById("input-buscar").value.trim();
-            if (!idDestino) return alert("Por favor pega el ID de tu amigo.");
-            
-            document.getElementById("estado-red").textContent = "Intentando conectar...";
-            conexionActiva = peer.connect(idDestino);
-            
-            conexionActiva.on('open', () => {
-                document.getElementById("estado-red").textContent = "¡Te has conectado con tu amigo!";
-                forzarAperturaChat();
-                configurarCanalChat();
-            });
+            const nombreAmigo = document.getElementById("input-buscar").value.trim().toLowerCase();
+            if (!nombreAmigo || nombreAmigo === miNombre) return alert("Nombre inválido.");
+
+            if (!listaAmigosActivos.includes(nombreAmigo)) {
+                listaAmigosActivos.push(nombreAmigo);
+                localStorage.setItem("wasapedro_amigos_list", JSON.stringify(listaAmigosActivos));
+            }
+
+            actualizarListaAmigosUI();
+            abrirChat(nombreAmigo);
+            document.getElementById("input-buscar").value = "";
         });
 
-        function configurarCanalChat() {
-            // Mandamos ráfagas del nombre para asegurar que llegue
-            let intentos = 0;
-            let intervaloNombre = setInterval(() => {
-                if(conexionActiva && conexionActiva.open) {
-                    conexionActiva.send({ tipo: 'nombre', valor: miNombre });
-                    intentos++;
-                    if(intentos > 4) clearInterval(intervaloNombre);
-                }
-            }, 400);
+        // --- ACTUALIZAR LA LISTA DE CHATS CON EL NOMBRE REAL ---
+        function actualizarListaAmigosUI() {
+            const contenedor = document.getElementById("contenedor-lista-dinamica");
+            contenedor.innerHTML = "";
 
-            conexionActiva.on('data', (data) => {
-                if (data.tipo === 'nombre') {
-                    nombreAmigoConectado = data.valor;
-                    document.getElementById("nombre-lista-amigo").textContent = nombreAmigoConectado;
-                    document.getElementById("avatar-lista-amigo").textContent = nombreAmigoConectado.charAt(0).toUpperCase();
-                    document.getElementById("nombre-chat-amigo").textContent = nombreAmigoConectado;
-                    document.getElementById("avatar-chat").textContent = nombreAmigoConectado.charAt(0).toUpperCase();
-                }
-                if (data.tipo === 'texto') {
-                    dibujarBurbuja(data.valor, false);
-                }
+            listaAmigosActivos.forEach(amigo => {
+                const div = document.createElement("div");
+                div.className = `flex items-center gap-3 p-3 rounded-lg cursor-pointer transition ${chatActivo === amigo ? 'bg-[#2a3942]' : 'bg-[#111b21] hover:bg-[#202d33]'}`;
+                div.onclick = () => abrirChat(amigo);
+                div.innerHTML = `
+                    <div class="w-10 h-10 bg-[#00a884] text-black font-bold rounded-full flex items-center justify-center text-sm">${amigo.charAt(0).toUpperCase()}</div>
+                    <div class="text-sm font-medium flex-1">
+                        <div>${amigo}</div>
+                        <div class="text-xs text-gray-400">Canal activo listo</div>
+                    </div>
+                `;
+                contenedor.appendChild(div);
             });
         }
 
-        function forzarAperturaChat() {
-            // Muestra inmediatamente el elemento en la barra lateral pase lo que pase
-            document.getElementById("amigo-item").classList.remove("hidden");
+        function abrirChat(amigo) {
+            chatActivo = amigo;
+            document.getElementById("pantalla-chat-vacia").classList.add("hidden");
+            document.getElementById("pantalla-chat-activa").classList.remove("hidden");
             
-            document.getElementById("amigo-item").onclick = () => {
-                document.getElementById("pantalla-chat-vacia").classList.add("hidden");
-                document.getElementById("pantalla-chat-activa").classList.remove("hidden");
-            };
+            document.getElementById("nombre-chat-amigo").textContent = amigo;
+            document.getElementById("avatar-chat").textContent = amigo.charAt(0).toUpperCase();
+            document.getElementById("contenedor-mensajes").innerHTML = ""; // Limpiar pantalla al cambiar de chat
             
-            // Forzar click automático para que les abra directamente la pantalla de mensajes
-            document.getElementById("amigo-item").click();
+            actualizarListaAmigosUI();
         }
 
+        // --- ENVIAR MENSAJES A TRAVÉS DE LA NUBE ---
         function enviarMensaje() {
             const input = document.getElementById("input-mensaje");
             const texto = input.value.trim();
-            if (!texto || !conexionActiva) return;
+            if (!texto || !chatActivo || !clienteMqtt) return;
 
-            conexionActiva.send({ tipo: 'texto', valor: texto });
+            const payload = {
+                emisor: miNombre,
+                texto: texto
+            };
+
+            // Publicamos el mensaje directamente en el buzón personal de nuestro amigo en la nube
+            clienteMqtt.publish(`wasapedro/chat/${chatActivo}`, JSON.stringify(payload));
+
+            // Lo dibujamos en nuestra propia pantalla
             dibujarBurbuja(texto, true);
             input.value = "";
         }
