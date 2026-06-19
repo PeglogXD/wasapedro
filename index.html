@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WasaPedro Real-Time Fijo</title>
+    <title>WasaPedro Cloud - Historial</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
 </head>
@@ -34,9 +34,9 @@
             </div>
 
             <div class="p-4 border-b border-[#222e35] bg-[#182229]">
-                <h2 class="text-xs font-bold tracking-wider text-gray-400 uppercase mb-2">Estado de Red</h2>
-                <div id="lista-solicitudes" class="space-y-2 text-xs text-gray-400">
-                    <p id="estado-red" class="italic text-[#00a884]">Conectando al servidor...</p>
+                <h2 class="text-xs font-bold tracking-wider text-gray-400 uppercase mb-2">Buzón de Mensajes Nuevos</h2>
+                <div id="lista-notificaciones" class="space-y-1 text-xs max-h-24 overflow-y-auto">
+                    <p class="italic text-gray-500">No tienes notificaciones pendientes.</p>
                 </div>
             </div>
 
@@ -49,7 +49,7 @@
         <div class="flex-1 flex flex-col bg-[#222e35] bg-opacity-20" id="pantalla-chat-vacia">
             <div class="m-auto text-center max-w-sm">
                 <h3 class="text-xl font-semibold text-gray-300">WasaPedro Cloud</h3>
-                <p class="text-sm text-gray-500 mt-2">Busca a tu amigo por su nombre exacto en la barra lateral para empezar a enviarse mensajes.</p>
+                <p class="text-sm text-gray-500 mt-2">Selecciona un amigo o busca uno nuevo para ver el historial.</p>
             </div>
         </div>
 
@@ -71,7 +71,11 @@
         let miNombre = localStorage.getItem("wasapedro_mqtt_name") || "";
         let clienteMqtt = null;
         let chatActivo = null;
+        
+        // Base de datos local para retener estados e historiales sin que se borren
         let listaAmigosActivos = JSON.parse(localStorage.getItem("wasapedro_amigos_list")) || [];
+        let historialesDeChats = JSON.parse(localStorage.getItem("wasapedro_historiales")) || {};
+        let notificacionesPendientes = {}; // Guardará cuántos mensajes tienes sin leer de cada persona
 
         if (miNombre) {
             document.getElementById("input-nombre").value = miNombre;
@@ -93,45 +97,46 @@
             conectarServidorCloud();
         });
 
-        // --- CONEXIÓN AL SERVIDOR EN LA NUBE ---
         function conectarServidorCloud() {
-            // Usamos el broker público y gratuito de HiveMQ sobre WebSockets seguros (ideal para GitHub Pages)
             clienteMqtt = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
 
             clienteMqtt.on('connect', () => {
-                document.getElementById("estado-red").textContent = "Conectado a la red de WasaPedro ✔";
-                
-                // Nos suscribimos a nuestro propio canal exclusivo para recibir mensajes dirigidos a nosotros
-                clienteMqtt.subscribe(`wasapedro/chat/${miNombre}`, (err) => {
-                    if (!err) console.log("Suscrito con éxito a mis mensajes.");
-                });
-                
+                clienteMqtt.subscribe(`wasapedro/chat/${miNombre}`);
                 actualizarListaAmigosUI();
+                actualizarBuzonNotificacionesUI();
             });
 
             clienteMqtt.on('message', (topico, mensaje) => {
                 const data = JSON.parse(mensaje.toString());
                 
-                // Si recibimos un mensaje de texto
                 if (data.emisor && data.texto) {
-                    // Si no teníamos a este amigo en la lista, lo agregamos automáticamente con su nombre real
-                    if (!listaAmigosActivos.includes(data.emisor)) {
-                        listaAmigosActivos.push(data.emisor);
+                    const deQuien = data.emisor;
+
+                    // 1. Asegurar que el amigo esté registrado en la lista lateral
+                    if (!listaAmigosActivos.includes(deQuien)) {
+                        listaAmigosActivos.push(deQuien);
                         localStorage.setItem("wasapedro_amigos_list", JSON.stringify(listaAmigosActivos));
                         actualizarListaAmigosUI();
                     }
-                    
-                    // Si tenemos el chat abierto con él, lo pintamos de inmediato
-                    if (chatActivo === data.emisor) {
+
+                    // 2. Guardar el mensaje en el historial permanente de esa persona
+                    if (!historialesDeChats[deQuien]) historialesDeChats[deQuien] = [];
+                    historialesDeChats[deQuien].push({ soyYo: false, texto: data.texto });
+                    localStorage.setItem("wasapedro_historiales", JSON.stringify(historialesDeChats));
+
+                    // 3. Manejo inteligente de visualización / notificación
+                    if (chatActivo === deQuien) {
+                        // Si tengo el chat abierto, lo pinto en pantalla al instante
                         dibujarBurbuja(data.texto, false);
                     } else {
-                        document.getElementById("estado-red").textContent = `¡Mensaje nuevo de ${data.emisor}!`;
+                        // Si estoy en otro chat, sumo una alerta al buzón
+                        notificacionesPendientes[deQuien] = (notificacionesPendientes[deQuien] || 0) + 1;
+                        actualizarBuzonNotificacionesUI();
                     }
                 }
             });
         }
 
-        // --- BUSCAR Y AGREGAR UN AMIGO POR SU NOMBRE REAL ---
         document.getElementById("btn-buscar").addEventListener("click", () => {
             const nombreAmigo = document.getElementById("input-buscar").value.trim().toLowerCase();
             if (!nombreAmigo || nombreAmigo === miNombre) return alert("Nombre inválido.");
@@ -146,7 +151,6 @@
             document.getElementById("input-buscar").value = "";
         });
 
-        // --- ACTUALIZAR LA LISTA DE CHATS CON EL NOMBRE REAL ---
         function actualizarListaAmigosUI() {
             const contenedor = document.getElementById("contenedor-lista-dinamica");
             contenedor.innerHTML = "";
@@ -159,40 +163,80 @@
                     <div class="w-10 h-10 bg-[#00a884] text-black font-bold rounded-full flex items-center justify-center text-sm">${amigo.charAt(0).toUpperCase()}</div>
                     <div class="text-sm font-medium flex-1">
                         <div>${amigo}</div>
-                        <div class="text-xs text-gray-400">Canal activo listo</div>
+                        <div class="text-xs text-gray-400">Hacer clic para conversar</div>
                     </div>
                 `;
                 contenedor.appendChild(div);
             });
         }
 
+        // --- MANEJO DE NOTIFICACIONES EN EL BUZÓN ---
+        function actualizarBuzonNotificacionesUI() {
+            const contenedor = document.getElementById("lista-notificaciones");
+            contenedor.innerHTML = "";
+
+            let vacio = true;
+            for (const amigo in notificacionesPendientes) {
+                if (notificacionesPendientes[amigo] > 0) {
+                    vacio = false;
+                    const div = document.createElement("div");
+                    div.className = "flex justify-between items-center bg-[#202d33] p-2 rounded mt-1 border-l-4 border-[#00a884]";
+                    div.innerHTML = `
+                        <span>📩 <strong>${amigo}</strong> te envió ${notificacionesPendientes[amigo]} mensaje(s)</span>
+                        <button onclick="abrirChat('${amigo}')" class="bg-[#00a884] text-black px-2 py-0.5 rounded font-bold text-[10px]">Ver</button>
+                    `;
+                    contenedor.appendChild(div);
+                }
+            }
+
+            if (vacio) {
+                contenedor.innerHTML = '<p class="italic text-gray-500">No tienes notificaciones pendientes.</p>';
+            }
+        }
+
+        // --- ABRIR CHAT Y RECONSTRUIR SU HISTORIAL ---
         function abrirChat(amigo) {
             chatActivo = amigo;
+
+            // Al abrir el chat, eliminamos su notificación pendiente del buzón
+            delete notificacionesPendientes[amigo];
+            actualizarBuzonNotificacionesUI();
+
             document.getElementById("pantalla-chat-vacia").classList.add("hidden");
             document.getElementById("pantalla-chat-activa").classList.remove("hidden");
             
             document.getElementById("nombre-chat-amigo").textContent = amigo;
             document.getElementById("avatar-chat").textContent = amigo.charAt(0).toUpperCase();
-            document.getElementById("contenedor-mensajes").innerHTML = ""; // Limpiar pantalla al cambiar de chat
             
+            // Limpiamos la pantalla y cargamos TODO el historial guardado de este amigo específico
+            const contenedorMsg = document.getElementById("contenedor-mensajes");
+            contenedorMsg.innerHTML = "";
+
+            const historial = historialesDeChats[amigo] || [];
+            historial.forEach(msg => {
+                dibujarBurbuja(msg.texto, msg.soyYo);
+            });
+
             actualizarListaAmigosUI();
         }
 
-        // --- ENVIAR MENSAJES A TRAVÉS DE LA NUBE ---
+        // --- ENVIAR Y RESPALDAR MENSAJES EN HISTORIAL ---
         function enviarMensaje() {
             const input = document.getElementById("input-mensaje");
             const texto = input.value.trim();
             if (!texto || !chatActivo || !clienteMqtt) return;
 
-            const payload = {
-                emisor: miNombre,
-                texto: texto
-            };
+            const payload = { emisor: miNombre, texto: texto };
 
-            // Publicamos el mensaje directamente en el buzón personal de nuestro amigo en la nube
+            // 1. Enviar a la nube para el amigo
             clienteMqtt.publish(`wasapedro/chat/${chatActivo}`, JSON.stringify(payload));
 
-            // Lo dibujamos en nuestra propia pantalla
+            // 2. Guardar el mensaje en nuestro propio historial para que no se borre al cambiar de pestaña
+            if (!historialesDeChats[chatActivo]) historialesDeChats[chatActivo] = [];
+            historialesDeChats[chatActivo].push({ soyYo: true, texto: texto });
+            localStorage.setItem("wasapedro_historiales", JSON.stringify(historialesDeChats));
+
+            // 3. Pintar en pantalla
             dibujarBurbuja(texto, true);
             input.value = "";
         }
