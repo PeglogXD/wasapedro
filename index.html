@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WasaPedro Custom Pro</title>
     <link rel="manifest" href="manifest.json"> 
+    
+    <!-- ESTA ETIQUETA CONTROLA LA BARRA QUE SE VE EN TU IMAGEN -->
+    <meta name="theme-color" id="meta-theme" content="#00a884">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
-    <!-- Iconos Phosphor para que los botones se vean profesionales -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body class="h-screen w-screen flex flex-col items-center justify-center p-4 bg-[#0b141a] text-[#e9edef] font-sans">
@@ -30,7 +33,6 @@
                     <div class="w-10 h-10 bg-[#00a884] theme-bg text-[#111b21] font-bold rounded-full flex items-center justify-center text-lg" id="avatar-usuario">?</div>
                     <span id="nombre-usuario-pantalla" class="font-medium text-sm">...</span>
                 </div>
-                <!-- Botón de Configuración -->
                 <button id="btn-config" class="text-xl text-gray-400 hover:text-white p-2 rounded-full transition">
                     <i class="ph ph-gear"></i>
                 </button>
@@ -92,7 +94,7 @@
                 <button id="btn-cerrar-config" class="text-gray-400 hover:text-white text-lg"><i class="ph ph-x"></i></button>
             </div>
             
-            <!-- 1. Color de Interfaz -->
+            <!-- Colores -->
             <div class="mb-6">
                 <label class="text-xs font-bold uppercase tracking-wider text-gray-400 block mb-3">Color de la interfaz</label>
                 <div class="grid grid-cols-4 gap-2">
@@ -103,12 +105,10 @@
                 </div>
             </div>
 
-            <!-- 2. Lista de Contactos Bloqueados -->
+            <!-- Bloqueados -->
             <div>
                 <label class="text-xs font-bold uppercase tracking-wider text-gray-400 block mb-2">Contactos Bloqueados</label>
-                <div id="contenedor-bloqueados" class="bg-[#182229] border border-[#222e35] rounded-xl p-3 max-h-40 overflow-y-auto space-y-2">
-                    <!-- Dinámico -->
-                </div>
+                <div id="contenedor-bloqueados" class="bg-[#182229] border border-[#222e35] rounded-xl p-3 max-h-40 overflow-y-auto space-y-2"></div>
             </div>
         </div>
     </div>
@@ -118,7 +118,6 @@
         let clienteMqtt = null;
         let chatActivo = null;
         
-        // Cargar Base de datos Local
         let listaAmigosActivos = JSON.parse(localStorage.getItem("wasapedro_amigos_list")) || [];
         let historialesDeChats = JSON.parse(localStorage.getItem("wasapedro_historiales")) || {};
         let apodosContactos = JSON.parse(localStorage.getItem("wasapedro_apodos")) || {};
@@ -158,8 +157,6 @@
                 const data = JSON.parse(mensaje.toString());
                 if (data.emisor && data.texto) {
                     const deQuien = data.emisor;
-
-                    // FILTRO DE BLOQUEO INTERNO: Si está bloqueado, se descarta por completo
                     if (listaBloqueados.includes(deQuien)) return;
 
                     if (!listaAmigosActivos.includes(deQuien)) {
@@ -186,7 +183,6 @@
             });
         }
 
-        // --- MANEJO DE BUSCADOR ---
         document.getElementById("btn-buscar").addEventListener("click", () => {
             const nombreAmigo = document.getElementById("input-buscar").value.trim().toLowerCase();
             if (!nombreAmigo || nombreAmigo === miNombre) return alert("Nombre inválido.");
@@ -202,12 +198,9 @@
             document.getElementById("input-buscar").value = "";
         });
 
-        // --- DIBUJAR LISTA DE CHATS CON EL BOTÓN TRIPLE PUNTO ---
         function actualizarListaAmigosUI() {
             const contenedor = document.getElementById("contenedor-lista-dinamica");
             contenedor.innerHTML = "";
-
-            // Filtrar amigos que no estén bloqueados para ocultarlos de la barra activa
             const visibles = listaAmigosActivos.filter(a => !listaBloqueados.includes(a));
 
             visibles.forEach(amigo => {
@@ -215,7 +208,6 @@
                 const div = document.createElement("div");
                 div.className = `flex items-center justify-between p-3 rounded-lg cursor-pointer transition ${chatActivo === amigo ? 'bg-[#2a3942]' : 'bg-[#111b21] hover:bg-[#202d33]'}`;
                 
-                // Layout del contacto
                 div.innerHTML = `
                     <div class="flex items-center gap-3 flex-1" onclick="abrirChat('${amigo}')">
                         <div class="w-10 h-10 bg-gray-600 text-white font-bold rounded-full flex items-center justify-center text-sm">${amigo.charAt(0).toUpperCase()}</div>
@@ -224,7 +216,6 @@
                             <div class="text-xs text-gray-400">${apodosContactos[amigo] ? '@' + amigo : 'Canal guardado'}</div>
                         </div>
                     </div>
-                    <!-- Tres Puntos de Opciones Directas -->
                     <div class="relative option-dropdown">
                         <button onclick="toggleMenuAmigo(event, '${amigo}')" class="text-gray-400 hover:text-white p-2 text-lg">
                             <i class="ph ph-dots-three-vertical"></i>
@@ -240,39 +231,29 @@
             });
         }
 
-        // Controladores del menú desplegable contextual (Tres puntos)
         function toggleMenuAmigo(e, amigo) {
             e.stopPropagation();
             const menú = document.getElementById(`menu-${amigo}`);
             const yaAbierto = !menú.classList.contains("hidden");
-            
-            // Cerrar todos los demás primero
             document.querySelectorAll('[id^="menu-"]').forEach(m => m.classList.add("hidden"));
             if (!yaAbierto) menú.classList.remove("hidden");
         }
 
-        // Cerrar menús al hacer clic afuera
         document.addEventListener("click", () => {
             document.querySelectorAll('[id^="menu-"]').forEach(m => m.classList.add("hidden"));
         });
 
-        // --- ACCIONES CONTEXTUALES DE AMIGOS ---
         function menuCambiarApodo(amigo) {
-            const nuevoApodo = prompt(`Elige un apodo para ${amigo} (solo tú lo verás):`, apodosContactos[amigo] || "");
+            const nuevoApodo = prompt(`Elige un apodo para ${amigo}:`, apodosContactos[amigo] || "");
             if (nuevoApodo === null) return;
-            
-            if (nuevoApodo.trim() === "") {
-                delete apodosContactos[amigo];
-            } else {
-                apodosContactos[amigo] = nuevoApodo.trim();
-            }
+            if (nuevoApodo.trim() === "") { delete apodosContactos[amigo]; } else { apodosContactos[amigo] = nuevoApodo.trim(); }
             localStorage.setItem("wasapedro_apodos", JSON.stringify(apodosContactos));
             actualizarListaAmigosUI();
             if(chatActivo === amigo) abrirChat(amigo);
         }
 
         function menuVaciarChat(amigo) {
-            if (confirm(`¿Seguro que quieres borrar todos los mensajes con ${apodosContactos[amigo] || amigo}? Esto no se puede deshacer.`)) {
+            if (confirm(`¿Vaciar conversación con ${apodosContactos[amigo] || amigo}?`)) {
                 historialesDeChats[amigo] = [];
                 localStorage.setItem("wasapedro_historiales", JSON.stringify(historialesDeChats));
                 if (chatActivo === amigo) abrirChat(amigo);
@@ -280,7 +261,7 @@
         }
 
         function menuBloquear(amigo) {
-            if (confirm(`¿Bloquear a ${apodosContactos[amigo] || amigo}? Ya no recibirás sus mensajes.`)) {
+            if (confirm(`¿Bloquear a ${apodosContactos[amigo] || amigo}?`)) {
                 if (!listaBloqueados.includes(amigo)) {
                     listaBloqueados.push(amigo);
                     localStorage.setItem("wasapedro_bloqueados", JSON.stringify(listaBloqueados));
@@ -295,7 +276,6 @@
             }
         }
 
-        // --- MODAL DE AJUSTES GENERALES (COLOR / DESBLOQUEO) ---
         const modalConfig = document.getElementById("modal-config");
         document.getElementById("btn-config").addEventListener("click", () => {
             dibujarListaBloqueadosUI();
@@ -307,14 +287,19 @@
             temaActual = hex;
             localStorage.setItem("wasapedro_theme_color", hex);
             aplicarColorTema(hex);
+            
+            // Si hay un chat abierto, redibujamos los globos de texto para que cambien al instante
+            if (chatActivo) abrirChat(chatActivo);
         }
 
         function aplicarColorTema(hex) {
-            // Reemplazar fondos y textos dinámicos con estilos inyectados directamente
+            // 1. CAMBIA EL COLOR DE LA BARRA NATIVA DE LA CHROMEBOOK (Muestra en image_20ace0.png)
+            document.getElementById("meta-theme").setAttribute("content", hex);
+
+            // 2. Cambia los componentes de la interfaz
             document.querySelectorAll(".theme-bg").forEach(el => el.style.backgroundColor = hex);
             document.querySelectorAll(".theme-text").forEach(el => el.style.color = hex);
             
-            // Forzar actualización del botón enviar e íconos principales
             document.getElementById("btn-enviar").style.backgroundColor = hex;
             document.getElementById("btn-guardar").style.backgroundColor = hex;
             document.getElementById("avatar-usuario").style.backgroundColor = hex;
@@ -324,17 +309,15 @@
         function dibujarListaBloqueadosUI() {
             const contenedor = document.getElementById("contenedor-bloqueados");
             contenedor.innerHTML = "";
-
             if (listaBloqueados.length === 0) {
-                contenedor.innerHTML = '<p class="text-xs italic text-gray-500 text-center py-2">No hay ningún usuario bloqueado.</p>';
+                contenedor.innerHTML = '<p class="text-xs italic text-gray-500 text-center py-2">Ningún usuario bloqueado.</p>';
                 return;
             }
-
             listaBloqueados.forEach(amigo => {
                 const div = document.createElement("div");
                 div.className = "flex justify-between items-center bg-[#202d33] p-2 rounded-lg border border-[#222e35]";
                 div.innerHTML = `
-                    <span class="text-xs font-medium text-white">${apodosContactos[amigo] || amigo} <span class="text-[10px] text-gray-400">(@${amigo})</span></span>
+                    <span class="text-xs font-medium text-white">${apodosContactos[amigo] || amigo}</span>
                     <button onclick="desbloquearUsuario('${amigo}')" class="bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-1 rounded text-[10px] font-bold hover:bg-red-500 hover:text-white transition">Desbloquear</button>
                 `;
                 contenedor.appendChild(div);
@@ -348,23 +331,20 @@
             actualizarListaAmigosUI();
         }
 
-        // --- BUZÓN DE NOTIFICACIONES ---
         function actualizarBuzonNotificacionesUI() {
             const contenedor = document.getElementById("lista-notificaciones");
             contenedor.innerHTML = "";
             let tieneAlertas = false;
 
             for (const amigo in notificacionesPendientes) {
-                // Si el emisor está bloqueado, saltárselo y no mostrar notificaciones archivadas
                 if (listaBloqueados.includes(amigo)) continue;
-
                 if (notificacionesPendientes[amigo] > 0) {
                     tieneAlertas = true;
                     const div = document.createElement("div");
                     div.className = "flex justify-between items-center bg-[#202d33] p-2 rounded mt-1 border-l-4";
                     div.style.borderLeftColor = temaActual;
                     div.innerHTML = `
-                        <span>📩 <strong>${apodosContactos[amigo] || amigo}</strong> te dejó un mensaje</span>
+                        <span>📩 <strong>${apodosContactos[amigo] || amigo}</strong> envió un mensaje</span>
                         <button onclick="abrirChat('${amigo}')" class="text-black px-2 py-0.5 rounded font-bold text-[10px]" style="background-color: ${temaActual}">Ver</button>
                     `;
                     contenedor.appendChild(div);
@@ -373,7 +353,6 @@
             if (!tieneAlertas) contenedor.innerHTML = '<p class="italic text-gray-500">Sin mensajes nuevos.</p>';
         }
 
-        // --- ABRIR COMPONENTE CHAT ---
         function abrirChat(amigo) {
             chatActivo = amigo;
             delete notificacionesPendientes[amigo];
@@ -418,7 +397,7 @@
             const div = document.createElement("div");
             div.className = `flex ${soyYo ? 'justify-end' : 'justify-start'}`;
             
-            // La burbuja del emisor cambia de tonalidad sutilmente dependiendo del tema de color activo
+            // CAMBIA EL COLOR DEL GLOBO QUE TÚ ENVIAS AL COLOR DEL TEMA SELECCIONADO
             const backgroundBurbuja = soyYo ? temaActual : '#202d33';
             const colorTexto = soyYo && (temaActual === '#00a884') ? 'text-black font-medium' : 'text-white';
 
