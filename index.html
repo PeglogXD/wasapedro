@@ -3,37 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WasaPedro Inmortal</title>
+    <title>WasaPedro Custom Pro</title>
     <link rel="manifest" href="manifest.json"> 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
+    <!-- Iconos Phosphor para que los botones se vean profesionales -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
-<body class="h-screen w-screen flex flex-col items-center justify-center p-4 bg-[#0b141a] text-[#e9edef] font-family: sans-serif;">
+<body class="h-screen w-screen flex flex-col items-center justify-center p-4 bg-[#0b141a] text-[#e9edef] font-sans">
 
+    <!-- 1. PANTALLA DE BIENVENIDA -->
     <div id="pantalla-registro" class="bg-[#111b21] p-8 rounded-2xl shadow-2xl border border-[#222e35] max-w-sm w-full text-center">
-        <h1 class="text-3xl font-extrabold text-[#00a884] mb-2">WasaPedro</h1>
-        <p class="text-gray-400 text-sm mb-6">Ingresa tu nombre para activar tu buzón persistente.</p>
+        <h1 class="text-3xl font-extrabold text-[#00a884] mb-2 theme-text">WasaPedro</h1>
+        <p class="text-gray-400 text-sm mb-6">Ingresa tu nombre único de usuario.</p>
         <input type="text" id="input-nombre" placeholder="Tu nombre..." class="w-full bg-[#2a3942] border-none text-white rounded-lg p-3 mb-4 focus:outline-none focus:ring-2 focus:ring-[#00a884]">
-        <button id="btn-guardar" class="w-full bg-[#00a884] hover:bg-[#008f72] text-[#111b21] font-bold p-3 rounded-lg transition">Ingresar</button>
+        <button id="btn-guardar" class="w-full bg-[#00a884] theme-bg hover:opacity-90 text-[#111b21] font-bold p-3 rounded-lg transition">Ingresar</button>
     </div>
 
+    <!-- 2. INTERFAZ PRINCIPAL -->
     <div id="interfaz-principal" class="w-full max-w-4xl h-[85vh] bg-[#111b21] rounded-2xl shadow-2xl border border-[#222e35] flex overflow-hidden hidden">
         
+        <!-- BARRA LATERAL -->
         <div class="w-1/3 border-r border-[#222e35] flex flex-col bg-[#111b21]">
             <div class="p-4 bg-[#202d33] flex justify-between items-center">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-[#00a884] text-[#111b21] font-bold rounded-full flex items-center justify-center text-lg" id="avatar-usuario">?</div>
+                    <div class="w-10 h-10 bg-[#00a884] theme-bg text-[#111b21] font-bold rounded-full flex items-center justify-center text-lg" id="avatar-usuario">?</div>
                     <span id="nombre-usuario-pantalla" class="font-medium text-sm">...</span>
                 </div>
+                <!-- Botón de Configuración -->
+                <button id="btn-config" class="text-xl text-gray-400 hover:text-white p-2 rounded-full transition">
+                    <i class="ph ph-gear"></i>
+                </button>
             </div>
 
+            <!-- Buscador Permanente -->
             <div class="p-3 bg-[#111b21] border-b border-[#222e35]">
                 <div class="flex flex-col gap-2 bg-[#202d33] rounded-lg p-2">
                     <input type="text" id="input-buscar" placeholder="Escribe el nombre de tu amigo..." class="bg-transparent text-xs w-full focus:outline-none text-white placeholder-gray-400">
-                    <button id="btn-buscar" class="bg-[#00a884] text-[#111b21] text-xs font-bold py-1 px-2 rounded w-full">Abrir Canal de Chat</button>
+                    <button id="btn-buscar" class="bg-[#00a884] theme-bg text-[#111b21] text-xs font-bold py-1 px-2 rounded w-full">Abrir Canal de Chat</button>
                 </div>
             </div>
 
+            <!-- Buzón de Alertas Recientes -->
             <div class="p-4 border-b border-[#222e35] bg-[#182229]">
                 <h2 class="text-xs font-bold tracking-wider text-gray-400 uppercase mb-2">Mensajes sin leer</h2>
                 <div id="lista-notificaciones" class="space-y-1 text-xs max-h-24 overflow-y-auto">
@@ -41,31 +52,65 @@
                 </div>
             </div>
 
+            <!-- Lista de Chats Guardados -->
             <div class="flex-1 overflow-y-auto p-2 space-y-1" id="lista-amigos">
                 <h2 class="text-xs font-bold tracking-wider text-gray-400 uppercase p-2">Mis Chats Guardados</h2>
                 <div id="contenedor-lista-dinamica" class="space-y-1"></div>
             </div>
         </div>
 
+        <!-- VENTANA DE CHAT VACÍA -->
         <div class="flex-1 flex flex-col bg-[#222e35] bg-opacity-20" id="pantalla-chat-vacia">
             <div class="m-auto text-center max-w-sm">
-                <h3 class="text-xl font-semibold text-gray-300">WasaPedro En Línea</h3>
-                <p class="text-sm text-gray-500 mt-2">Los mensajes enviados mientras estabas desconectado aparecerán aquí al abrir la app.</p>
+                <h3 class="text-xl font-semibold text-gray-300">WasaPedro Custom</h3>
+                <p class="text-sm text-gray-500 mt-2">Configura tus temas y administra tus contactos desde el menú lateral.</p>
             </div>
         </div>
 
+        <!-- VENTANA DE CHAT ACTIVA -->
         <div class="flex-1 flex flex-col bg-[#0b141a] hidden" id="pantalla-chat-activa">
-            <div class="p-4 bg-[#202d33] flex items-center gap-3 border-b border-[#222e35]">
-                <div class="w-9 h-9 bg-[#00a884] text-black font-bold rounded-full flex items-center justify-center text-sm" id="avatar-chat">?</div>
-                <span id="nombre-chat-amigo" class="font-medium text-sm">...</span>
+            <div class="p-4 bg-[#202d33] flex items-center justify-between border-b border-[#222e35]">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-[#00a884] theme-bg text-black font-bold rounded-full flex items-center justify-center text-sm" id="avatar-chat">?</div>
+                    <span id="nombre-chat-amigo" class="font-medium text-sm">...</span>
+                </div>
             </div>
             <div class="flex-1 overflow-y-auto p-4 space-y-3" id="contenedor-mensajes"></div>
             <div class="p-4 bg-[#202d33] flex gap-3 items-center">
                 <input type="text" id="input-mensaje" placeholder="Escribe un mensaje..." class="flex-1 bg-[#2a3942] rounded-lg p-3 text-sm text-white focus:outline-none">
-                <button id="btn-enviar" class="bg-[#00a884] text-[#111b21] font-bold px-5 py-3 rounded-lg text-sm hover:bg-[#008f72]">Enviar</button>
+                <button id="btn-enviar" class="bg-[#00a884] theme-bg text-[#111b21] font-bold px-5 py-3 rounded-lg text-sm hover:opacity-90">Enviar</button>
             </div>
         </div>
 
+    </div>
+
+    <!-- MODAL DE CONFIGURACIÓN -->
+    <div id="modal-config" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-[#111b21] border border-[#222e35] w-full max-w-md rounded-2xl p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2"><i class="ph ph-gear"></i> Ajustes Personalizados</h2>
+                <button id="btn-cerrar-config" class="text-gray-400 hover:text-white text-lg"><i class="ph ph-x"></i></button>
+            </div>
+            
+            <!-- 1. Color de Interfaz -->
+            <div class="mb-6">
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400 block mb-3">Color de la interfaz</label>
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="cambiarTema('#00a884')" class="w-full h-10 bg-[#00a884] rounded-lg font-bold text-xs text-black flex items-center justify-center">Verde</button>
+                    <button onclick="cambiarTema('#007acc')" class="w-full h-10 bg-[#007acc] rounded-lg font-bold text-xs text-white flex items-center justify-center">Azul</button>
+                    <button onclick="cambiarTema('#a855f7')" class="w-full h-10 bg-[#a855f7] rounded-lg font-bold text-xs text-white flex items-center justify-center">Morado</button>
+                    <button onclick="cambiarTema('#ef4444')" class="w-full h-10 bg-[#ef4444] rounded-lg font-bold text-xs text-white flex items-center justify-center">Rojo</button>
+                </div>
+            </div>
+
+            <!-- 2. Lista de Contactos Bloqueados -->
+            <div>
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400 block mb-2">Contactos Bloqueados</label>
+                <div id="contenedor-bloqueados" class="bg-[#182229] border border-[#222e35] rounded-xl p-3 max-h-40 overflow-y-auto space-y-2">
+                    <!-- Dinámico -->
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -73,55 +118,49 @@
         let clienteMqtt = null;
         let chatActivo = null;
         
+        // Cargar Base de datos Local
         let listaAmigosActivos = JSON.parse(localStorage.getItem("wasapedro_amigos_list")) || [];
         let historialesDeChats = JSON.parse(localStorage.getItem("wasapedro_historiales")) || {};
+        let apodosContactos = JSON.parse(localStorage.getItem("wasapedro_apodos")) || {};
+        let listaBloqueados = JSON.parse(localStorage.getItem("wasapedro_bloqueados")) || [];
+        
         let notificacionesPendientes = {};
+        let temaActual = localStorage.getItem("wasapedro_theme_color") || "#00a884";
 
         if (miNombre) {
             document.getElementById("pantalla-registro").classList.add("hidden");
             document.getElementById("interfaz-principal").classList.remove("hidden");
             document.getElementById("nombre-usuario-pantalla").textContent = miNombre;
             document.getElementById("avatar-usuario").textContent = miNombre.charAt(0).toUpperCase();
+            aplicarColorTema(temaActual);
             conectarServidorCloud();
         }
 
         document.getElementById("btn-guardar").addEventListener("click", () => {
             const nombre = document.getElementById("input-nombre").value.trim().toLowerCase();
             if (nombre.length < 2) return alert("Nombre muy corto.");
-            
             miNombre = nombre;
             localStorage.setItem("wasapedro_mqtt_name", miNombre);
-            
-            document.getElementById("pantalla-registro").classList.add("hidden");
-            document.getElementById("interfaz-principal").classList.remove("hidden");
-            document.getElementById("nombre-usuario-pantalla").textContent = miNombre;
-            document.getElementById("avatar-usuario").textContent = miNombre.charAt(0).toUpperCase();
-            
-            conectarServidorCloud();
+            location.reload();
         });
 
         function conectarServidorCloud() {
-            // CONFIGURACIÓN CLAVE: clean: false y un clientId único le dicen al servidor que guarde nuestros mensajes si nos desconectamos
-            const opcionesMqtt = {
-                clientId: "wasapedro_client_v3_" + miNombre,
-                clean: false
-            };
-
+            const opcionesMqtt = { clientId: "wasapedro_client_v3_" + miNombre, clean: false };
             clienteMqtt = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', opcionesMqtt);
 
             clienteMqtt.on('connect', () => {
-                // qos: 1 obliga al servidor a guardar los mensajes offline en su base de datos temporal
                 clienteMqtt.subscribe(`wasapedro/v3/chat/${miNombre}`, { qos: 1 });
-                
                 actualizarListaAmigosUI();
                 actualizarBuzonNotificacionesUI();
             });
 
             clienteMqtt.on('message', (topico, mensaje) => {
                 const data = JSON.parse(mensaje.toString());
-                
                 if (data.emisor && data.texto) {
                     const deQuien = data.emisor;
+
+                    // FILTRO DE BLOQUEO INTERNO: Si está bloqueado, se descarta por completo
+                    if (listaBloqueados.includes(deQuien)) return;
 
                     if (!listaAmigosActivos.includes(deQuien)) {
                         listaAmigosActivos.push(deQuien);
@@ -131,7 +170,6 @@
 
                     if (!historialesDeChats[deQuien]) historialesDeChats[deQuien] = [];
                     
-                    // Verificación estricta de ID para que los mensajes retenidos no se dupliquen al abrir la app
                     const yaExiste = historialesDeChats[deQuien].some(m => m.idMsg === data.idMsg);
                     if (!yaExiste) {
                         historialesDeChats[deQuien].push({ soyYo: false, texto: data.texto, idMsg: data.idMsg });
@@ -148,9 +186,11 @@
             });
         }
 
+        // --- MANEJO DE BUSCADOR ---
         document.getElementById("btn-buscar").addEventListener("click", () => {
             const nombreAmigo = document.getElementById("input-buscar").value.trim().toLowerCase();
             if (!nombreAmigo || nombreAmigo === miNombre) return alert("Nombre inválido.");
+            if (listaBloqueados.includes(nombreAmigo)) return alert("Tienes bloqueado a este usuario.");
 
             if (!listaAmigosActivos.includes(nombreAmigo)) {
                 listaAmigosActivos.push(nombreAmigo);
@@ -162,38 +202,170 @@
             document.getElementById("input-buscar").value = "";
         });
 
+        // --- DIBUJAR LISTA DE CHATS CON EL BOTÓN TRIPLE PUNTO ---
         function actualizarListaAmigosUI() {
             const contenedor = document.getElementById("contenedor-lista-dinamica");
             contenedor.innerHTML = "";
 
-            listaAmigosActivos.forEach(amigo => {
+            // Filtrar amigos que no estén bloqueados para ocultarlos de la barra activa
+            const visibles = listaAmigosActivos.filter(a => !listaBloqueados.includes(a));
+
+            visibles.forEach(amigo => {
+                const nombreAMostrar = apodosContactos[amigo] || amigo;
                 const div = document.createElement("div");
-                div.className = `flex items-center gap-3 p-3 rounded-lg cursor-pointer transition ${chatActivo === amigo ? 'bg-[#2a3942]' : 'bg-[#111b21] hover:bg-[#202d33]'}`;
-                div.onclick = () => abrirChat(amigo);
+                div.className = `flex items-center justify-between p-3 rounded-lg cursor-pointer transition ${chatActivo === amigo ? 'bg-[#2a3942]' : 'bg-[#111b21] hover:bg-[#202d33]'}`;
+                
+                // Layout del contacto
                 div.innerHTML = `
-                    <div class="w-10 h-10 bg-[#00a884] text-black font-bold rounded-full flex items-center justify-center text-sm">${amigo.charAt(0).toUpperCase()}</div>
-                    <div class="text-sm font-medium flex-1">
-                        <div>${amigo}</div>
-                        <div class="text-xs text-gray-400">Canal guardado</div>
+                    <div class="flex items-center gap-3 flex-1" onclick="abrirChat('${amigo}')">
+                        <div class="w-10 h-10 bg-gray-600 text-white font-bold rounded-full flex items-center justify-center text-sm">${amigo.charAt(0).toUpperCase()}</div>
+                        <div class="text-sm font-medium flex-1">
+                            <div class="text-white truncate max-w-[120px]">${nombreAMostrar}</div>
+                            <div class="text-xs text-gray-400">${apodosContactos[amigo] ? '@' + amigo : 'Canal guardado'}</div>
+                        </div>
+                    </div>
+                    <!-- Tres Puntos de Opciones Directas -->
+                    <div class="relative option-dropdown">
+                        <button onclick="toggleMenuAmigo(event, '${amigo}')" class="text-gray-400 hover:text-white p-2 text-lg">
+                            <i class="ph ph-dots-three-vertical"></i>
+                        </button>
+                        <div id="menu-${amigo}" class="absolute right-0 top-10 bg-[#202d33] border border-[#222e35] rounded-xl shadow-2xl py-1 w-36 hidden z-40 text-xs">
+                            <button onclick="menuCambiarApodo('${amigo}')" class="w-full text-left px-3 py-2 hover:bg-[#2a3942] flex items-center gap-2 text-white"><i class="ph ph-pencil"></i> Poner Apodo</button>
+                            <button onclick="menuVaciarChat('${amigo}')" class="w-full text-left px-3 py-2 hover:bg-[#2a3942] flex items-center gap-2 text-yellow-500"><i class="ph ph-trash"></i> Vaciar Chat</button>
+                            <button onclick="menuBloquear('${amigo}')" class="w-full text-left px-3 py-2 hover:bg-[#2a3942] flex items-center gap-2 text-red-500 font-semibold"><i class="ph ph-prohibit"></i> Bloquear</button>
+                        </div>
                     </div>
                 `;
                 contenedor.appendChild(div);
             });
         }
 
+        // Controladores del menú desplegable contextual (Tres puntos)
+        function toggleMenuAmigo(e, amigo) {
+            e.stopPropagation();
+            const menú = document.getElementById(`menu-${amigo}`);
+            const yaAbierto = !menú.classList.contains("hidden");
+            
+            // Cerrar todos los demás primero
+            document.querySelectorAll('[id^="menu-"]').forEach(m => m.classList.add("hidden"));
+            if (!yaAbierto) menú.classList.remove("hidden");
+        }
+
+        // Cerrar menús al hacer clic afuera
+        document.addEventListener("click", () => {
+            document.querySelectorAll('[id^="menu-"]').forEach(m => m.classList.add("hidden"));
+        });
+
+        // --- ACCIONES CONTEXTUALES DE AMIGOS ---
+        function menuCambiarApodo(amigo) {
+            const nuevoApodo = prompt(`Elige un apodo para ${amigo} (solo tú lo verás):`, apodosContactos[amigo] || "");
+            if (nuevoApodo === null) return;
+            
+            if (nuevoApodo.trim() === "") {
+                delete apodosContactos[amigo];
+            } else {
+                apodosContactos[amigo] = nuevoApodo.trim();
+            }
+            localStorage.setItem("wasapedro_apodos", JSON.stringify(apodosContactos));
+            actualizarListaAmigosUI();
+            if(chatActivo === amigo) abrirChat(amigo);
+        }
+
+        function menuVaciarChat(amigo) {
+            if (confirm(`¿Seguro que quieres borrar todos los mensajes con ${apodosContactos[amigo] || amigo}? Esto no se puede deshacer.`)) {
+                historialesDeChats[amigo] = [];
+                localStorage.setItem("wasapedro_historiales", JSON.stringify(historialesDeChats));
+                if (chatActivo === amigo) abrirChat(amigo);
+            }
+        }
+
+        function menuBloquear(amigo) {
+            if (confirm(`¿Bloquear a ${apodosContactos[amigo] || amigo}? Ya no recibirás sus mensajes.`)) {
+                if (!listaBloqueados.includes(amigo)) {
+                    listaBloqueados.push(amigo);
+                    localStorage.setItem("wasapedro_bloqueados", JSON.stringify(listaBloqueados));
+                }
+                if (chatActivo === amigo) {
+                    chatActivo = null;
+                    document.getElementById("pantalla-chat-activa").classList.add("hidden");
+                    document.getElementById("pantalla-chat-vacia").classList.remove("hidden");
+                }
+                actualizarListaAmigosUI();
+                actualizarBuzonNotificacionesUI();
+            }
+        }
+
+        // --- MODAL DE AJUSTES GENERALES (COLOR / DESBLOQUEO) ---
+        const modalConfig = document.getElementById("modal-config");
+        document.getElementById("btn-config").addEventListener("click", () => {
+            dibujarListaBloqueadosUI();
+            modalConfig.classList.remove("hidden");
+        });
+        document.getElementById("btn-cerrar-config").addEventListener("click", () => modalConfig.classList.add("hidden"));
+
+        function cambiarTema(hex) {
+            temaActual = hex;
+            localStorage.setItem("wasapedro_theme_color", hex);
+            aplicarColorTema(hex);
+        }
+
+        function aplicarColorTema(hex) {
+            // Reemplazar fondos y textos dinámicos con estilos inyectados directamente
+            document.querySelectorAll(".theme-bg").forEach(el => el.style.backgroundColor = hex);
+            document.querySelectorAll(".theme-text").forEach(el => el.style.color = hex);
+            
+            // Forzar actualización del botón enviar e íconos principales
+            document.getElementById("btn-enviar").style.backgroundColor = hex;
+            document.getElementById("btn-guardar").style.backgroundColor = hex;
+            document.getElementById("avatar-usuario").style.backgroundColor = hex;
+            if (document.getElementById("avatar-chat")) document.getElementById("avatar-chat").style.backgroundColor = hex;
+        }
+
+        function dibujarListaBloqueadosUI() {
+            const contenedor = document.getElementById("contenedor-bloqueados");
+            contenedor.innerHTML = "";
+
+            if (listaBloqueados.length === 0) {
+                contenedor.innerHTML = '<p class="text-xs italic text-gray-500 text-center py-2">No hay ningún usuario bloqueado.</p>';
+                return;
+            }
+
+            listaBloqueados.forEach(amigo => {
+                const div = document.createElement("div");
+                div.className = "flex justify-between items-center bg-[#202d33] p-2 rounded-lg border border-[#222e35]";
+                div.innerHTML = `
+                    <span class="text-xs font-medium text-white">${apodosContactos[amigo] || amigo} <span class="text-[10px] text-gray-400">(@${amigo})</span></span>
+                    <button onclick="desbloquearUsuario('${amigo}')" class="bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-1 rounded text-[10px] font-bold hover:bg-red-500 hover:text-white transition">Desbloquear</button>
+                `;
+                contenedor.appendChild(div);
+            });
+        }
+
+        function desbloquearUsuario(amigo) {
+            listaBloqueados = listaBloqueados.filter(u => u !== amigo);
+            localStorage.setItem("wasapedro_bloqueados", JSON.stringify(listaBloqueados));
+            dibujarListaBloqueadosUI();
+            actualizarListaAmigosUI();
+        }
+
+        // --- BUZÓN DE NOTIFICACIONES ---
         function actualizarBuzonNotificacionesUI() {
             const contenedor = document.getElementById("lista-notificaciones");
             contenedor.innerHTML = "";
             let tieneAlertas = false;
 
             for (const amigo in notificacionesPendientes) {
+                // Si el emisor está bloqueado, saltárselo y no mostrar notificaciones archivadas
+                if (listaBloqueados.includes(amigo)) continue;
+
                 if (notificacionesPendientes[amigo] > 0) {
                     tieneAlertas = true;
                     const div = document.createElement("div");
-                    div.className = "flex justify-between items-center bg-[#202d33] p-2 rounded mt-1 border-l-4 border-[#00a884]";
+                    div.className = "flex justify-between items-center bg-[#202d33] p-2 rounded mt-1 border-l-4";
+                    div.style.borderLeftColor = temaActual;
                     div.innerHTML = `
-                        <span>📩 <strong>${amigo}</strong> te dejó un mensaje</span>
-                        <button onclick="abrirChat('${amigo}')" class="bg-[#00a884] text-black px-2 py-0.5 rounded font-bold text-[10px]">Ver</button>
+                        <span>📩 <strong>${apodosContactos[amigo] || amigo}</strong> te dejó un mensaje</span>
+                        <button onclick="abrirChat('${amigo}')" class="text-black px-2 py-0.5 rounded font-bold text-[10px]" style="background-color: ${temaActual}">Ver</button>
                     `;
                     contenedor.appendChild(div);
                 }
@@ -201,6 +373,7 @@
             if (!tieneAlertas) contenedor.innerHTML = '<p class="italic text-gray-500">Sin mensajes nuevos.</p>';
         }
 
+        // --- ABRIR COMPONENTE CHAT ---
         function abrirChat(amigo) {
             chatActivo = amigo;
             delete notificacionesPendientes[amigo];
@@ -209,8 +382,9 @@
             document.getElementById("pantalla-chat-vacia").classList.add("hidden");
             document.getElementById("pantalla-chat-activa").classList.remove("hidden");
             
-            document.getElementById("nombre-chat-amigo").textContent = amigo;
+            document.getElementById("nombre-chat-amigo").textContent = apodosContactos[amigo] || amigo;
             document.getElementById("avatar-chat").textContent = amigo.charAt(0).toUpperCase();
+            document.getElementById("avatar-chat").style.backgroundColor = temaActual;
             
             const contenedorMsg = document.getElementById("contenedor-mensajes");
             contenedorMsg.innerHTML = "";
@@ -229,7 +403,6 @@
             const idMensajeUnico = miNombre + "_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
             const payload = { emisor: miNombre, texto: texto, idMsg: idMensajeUnico };
 
-            // Forzamos QoS 1 al publicar para que viaje de forma segura por internet
             clienteMqtt.publish(`wasapedro/v3/chat/${chatActivo}`, JSON.stringify(payload), { qos: 1 });
 
             if (!historialesDeChats[chatActivo]) historialesDeChats[chatActivo] = [];
@@ -244,7 +417,12 @@
             const contenedor = document.getElementById("contenedor-mensajes");
             const div = document.createElement("div");
             div.className = `flex ${soyYo ? 'justify-end' : 'justify-start'}`;
-            div.innerHTML = `<div class="max-w-xs rounded-xl p-3 text-sm text-white shadow ${soyYo ? 'bg-[#005c4b]' : 'bg-[#202d33]'}">${texto}</div>`;
+            
+            // La burbuja del emisor cambia de tonalidad sutilmente dependiendo del tema de color activo
+            const backgroundBurbuja = soyYo ? temaActual : '#202d33';
+            const colorTexto = soyYo && (temaActual === '#00a884') ? 'text-black font-medium' : 'text-white';
+
+            div.innerHTML = `<div class="max-w-xs rounded-xl p-3 text-sm shadow ${colorTexto}" style="background-color: ${backgroundBurbuja}">${texto}</div>`;
             contenedor.appendChild(div);
             contenedor.scrollTop = contenedor.scrollHeight;
         }
