@@ -3,14 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WasaPedro P2P</title>
+    <title>WasaPedro P2P - Fijo</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Librería PeerJS: Conecta dispositivos directamente sin bases de datos bloqueadas -->
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 </head>
 <body class="h-screen w-screen flex flex-col items-center justify-center p-4 bg-[#0b141a] text-[#e9edef] font-family: sans-serif;">
 
-    <!-- 1. PANTALLA DE BIENVENIDA -->
     <div id="pantalla-registro" class="bg-[#111b21] p-8 rounded-2xl shadow-2xl border border-[#222e35] max-w-sm w-full text-center">
         <h1 class="text-3xl font-extrabold text-[#00a884] mb-2">WasaPedro</h1>
         <p class="text-gray-400 text-sm mb-6">Ingresa tu nombre para generar tu ID de red.</p>
@@ -18,23 +16,19 @@
         <button id="btn-guardar" class="w-full bg-[#00a884] hover:bg-[#008f72] text-[#111b21] font-bold p-3 rounded-lg transition">Ingresar a WasaPedro</button>
     </div>
 
-    <!-- 2. INTERFAZ PRINCIPAL -->
     <div id="interfaz-principal" class="w-full max-w-4xl h-[85vh] bg-[#111b21] rounded-2xl shadow-2xl border border-[#222e35] flex overflow-hidden hidden">
         
-        <!-- BARRA LATERAL -->
         <div class="w-1/3 border-r border-[#222e35] flex flex-col bg-[#111b21]">
             <div class="p-4 bg-[#202d33] flex flex-col gap-1">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-[#00a884] text-[#111b21] font-bold rounded-full flex items-center justify-center text-lg" id="avatar-usuario">?</div>
                     <span id="nombre-usuario-pantalla" class="font-medium text-sm">...</span>
                 </div>
-                <!-- ID que le debes pasar a tu amigo -->
                 <div class="text-[11px] text-gray-400 mt-2 bg-[#111b21] p-2 rounded border border-[#222e35]">
                     Mi ID de conexión: <span id="mi-id-display" class="font-mono text-[#00a884] select-all font-bold">Cargando...</span>
                 </div>
             </div>
 
-            <!-- Buscador por ID -->
             <div class="p-3 bg-[#111b21] border-b border-[#222e35]">
                 <div class="flex flex-col gap-2 bg-[#202d33] rounded-lg p-2">
                     <input type="text" id="input-buscar" placeholder="Pegar ID de tu amigo..." class="bg-transparent text-xs w-full focus:outline-none text-white placeholder-gray-400">
@@ -42,7 +36,6 @@
                 </div>
             </div>
 
-            <!-- Buzón de Estado -->
             <div class="p-4 border-b border-[#222e35] bg-[#182229]">
                 <h2 class="text-xs font-bold tracking-wider text-gray-400 uppercase mb-2">Buzón de Conexión</h2>
                 <div id="lista-solicitudes" class="space-y-2 text-xs text-gray-400">
@@ -50,17 +43,18 @@
                 </div>
             </div>
 
-            <!-- Lista de Amigos Conectados -->
             <div class="flex-1 overflow-y-auto p-2 space-y-1" id="lista-amigos">
                 <h2 class="text-xs font-bold tracking-wider text-gray-400 uppercase p-2">Chats Activos</h2>
-                <div id="amigo-item" class="hidden flex items-center gap-3 p-3 rounded-lg cursor-pointer bg-[#2a3942]">
-                    <div class="w-10 h-10 bg-gray-600 text-white font-bold rounded-full flex items-center justify-center text-sm" id="avatar-lista-amigo">-</div>
-                    <div class="text-sm font-medium flex-1" id="nombre-lista-amigo">Amigo</div>
+                <div id="amigo-item" class="hidden flex items-center gap-3 p-3 rounded-lg cursor-pointer bg-[#2a3942] hover:bg-[#202d33]">
+                    <div class="w-10 h-10 bg-[#00a884] text-black font-bold rounded-full flex items-center justify-center text-sm" id="avatar-lista-amigo">A</div>
+                    <div class="text-sm font-medium flex-1">
+                        <div id="nombre-lista-amigo">Amigo Conectado</div>
+                        <div class="text-xs text-[#00a884]">Haz clic aquí para escribir</div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- VENTANA DE CHAT -->
         <div class="flex-1 flex flex-col bg-[#222e35] bg-opacity-20" id="pantalla-chat-vacia">
             <div class="m-auto text-center max-w-sm">
                 <h3 class="text-xl font-semibold text-gray-300">WasaPedro Directo</h3>
@@ -70,8 +64,8 @@
 
         <div class="flex-1 flex flex-col bg-[#0b141a] hidden" id="pantalla-chat-activa">
             <div class="p-4 bg-[#202d33] flex items-center gap-3 border-b border-[#222e35]">
-                <div class="w-9 h-9 bg-[#00a884] text-black font-bold rounded-full flex items-center justify-center text-sm" id="avatar-chat">?</div>
-                <span id="nombre-chat-amigo" class="font-medium text-sm">...</span>
+                <div class="w-9 h-9 bg-[#00a884] text-black font-bold rounded-full flex items-center justify-center text-sm" id="avatar-chat">A</div>
+                <span id="nombre-chat-amigo" class="font-medium text-sm">Mi Amigo</span>
             </div>
             <div class="flex-1 overflow-y-auto p-4 space-y-3" id="contenedor-mensajes"></div>
             <div class="p-4 bg-[#202d33] flex gap-3 items-center">
@@ -86,7 +80,7 @@
         let miNombre = localStorage.getItem("wasapedro_p2p_name");
         let peer = null;
         let conexionActiva = null;
-        let nombreAmigoConectado = "";
+        let nombreAmigoConectado = "Amigo Conectado";
 
         if (miNombre) {
             document.getElementById("input-nombre").value = miNombre;
@@ -108,11 +102,8 @@
             inicializarP2P();
         });
 
-        // --- CONFIGURACIÓN DE RED P2P (DIRECTA ENTRE NAVEGADORES) ---
         function inicializarP2P() {
-            // Creamos un ID aleatorio combinando su nombre
             const idGenerado = miNombre.replace(/\s+/g, '') + "-" + Math.floor(1000 + Math.random() * 9000);
-            
             peer = new Peer(idGenerado);
 
             peer.on('open', (id) => {
@@ -120,15 +111,16 @@
                 document.getElementById("estado-red").textContent = "Listo. Esperando conexión...";
             });
 
-            // Escuchar si alguien se conecta a nosotros
+            // Si alguien se conecta a nosotros
             peer.on('connection', (conn) => {
                 conexionActiva = conn;
                 document.getElementById("estado-red").textContent = "¡Amigo conectado con éxito!";
+                forzarAperturaChat();
                 configurarCanalChat();
             });
         }
 
-        // --- CONECTARSE A UN AMIGO ---
+        // Si nosotros nos conectamos a un amigo
         document.getElementById("btn-buscar").addEventListener("click", () => {
             const idDestino = document.getElementById("input-buscar").value.trim();
             if (!idDestino) return alert("Por favor pega el ID de tu amigo.");
@@ -138,59 +130,57 @@
             
             conexionActiva.on('open', () => {
                 document.getElementById("estado-red").textContent = "¡Te has conectado con tu amigo!";
+                forzarAperturaChat();
                 configurarCanalChat();
             });
         });
 
-        // --- CONFIGURACIÓN DE LA VENTANA DE CHAT ---
         function configurarCanalChat() {
-            // Intercambiar nombres automáticamente al conectar
-            setTimeout(() => {
-                conexionActiva.send({ tipo: 'nombre', valor: miNombre });
-            }, 500);
+            // Mandamos ráfagas del nombre para asegurar que llegue
+            let intentos = 0;
+            let intervaloNombre = setInterval(() => {
+                if(conexionActiva && conexionActiva.open) {
+                    conexionActiva.send({ tipo: 'nombre', valor: miNombre });
+                    intentos++;
+                    if(intentos > 4) clearInterval(intervaloNombre);
+                }
+            }, 400);
 
             conexionActiva.on('data', (data) => {
                 if (data.tipo === 'nombre') {
                     nombreAmigoConectado = data.valor;
-                    mostrarAmigoEnLista();
+                    document.getElementById("nombre-lista-amigo").textContent = nombreAmigoConectado;
+                    document.getElementById("avatar-lista-amigo").textContent = nombreAmigoConectado.charAt(0).toUpperCase();
+                    document.getElementById("nombre-chat-amigo").textContent = nombreAmigoConectado;
+                    document.getElementById("avatar-chat").textContent = nombreAmigoConectado.charAt(0).toUpperCase();
                 }
                 if (data.tipo === 'texto') {
-                    recibirMensaje(data.valor);
+                    dibujarBurbuja(data.valor, false);
                 }
             });
         }
 
-        function mostrarAmigoEnLista() {
+        function forzarAperturaChat() {
+            // Muestra inmediatamente el elemento en la barra lateral pase lo que pase
             document.getElementById("amigo-item").classList.remove("hidden");
-            document.getElementById("nombre-lista-amigo").textContent = nombreAmigoConectado;
-            document.getElementById("avatar-lista-amigo").textContent = nombreAmigoConectado.charAt(0).toUpperCase();
             
-            // Activar el área de chat automáticamente
             document.getElementById("amigo-item").onclick = () => {
                 document.getElementById("pantalla-chat-vacia").classList.add("hidden");
                 document.getElementById("pantalla-chat-activa").classList.remove("hidden");
-                document.getElementById("nombre-chat-amigo").textContent = nombreAmigoConectado;
-                document.getElementById("avatar-chat").textContent = nombreAmigoConectado.charAt(0).toUpperCase();
             };
-            document.getElementById("amigo-item").click(); // Abre el chat automáticamente
+            
+            // Forzar click automático para que les abra directamente la pantalla de mensajes
+            document.getElementById("amigo-item").click();
         }
 
-        // --- SISTEMA DE MENSAJES ---
         function enviarMensaje() {
             const input = document.getElementById("input-mensaje");
             const texto = input.value.trim();
             if (!texto || !conexionActiva) return;
 
-            // Enviar por el aire al amigo
             conexionActiva.send({ tipo: 'texto', valor: texto });
-
-            // Pintar en nuestra pantalla
             dibujarBurbuja(texto, true);
             input.value = "";
-        }
-
-        function recibirMensaje(texto) {
-            dibujarBurbuja(texto, false);
         }
 
         function dibujarBurbuja(texto, soyYo) {
