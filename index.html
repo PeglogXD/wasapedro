@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WasaPedro Estable</title>
-    <link rel="manifest" href="manifest.json">
-    
+    <title>WasaPedro Inmortal</title>
+    <link rel="manifest" href="manifest.json"> 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
 </head>
@@ -13,7 +12,7 @@
 
     <div id="pantalla-registro" class="bg-[#111b21] p-8 rounded-2xl shadow-2xl border border-[#222e35] max-w-sm w-full text-center">
         <h1 class="text-3xl font-extrabold text-[#00a884] mb-2">WasaPedro</h1>
-        <p class="text-gray-400 text-sm mb-6">Ingresa tu nombre para conectar tu chat permanente.</p>
+        <p class="text-gray-400 text-sm mb-6">Ingresa tu nombre para activar tu buzón persistente.</p>
         <input type="text" id="input-nombre" placeholder="Tu nombre..." class="w-full bg-[#2a3942] border-none text-white rounded-lg p-3 mb-4 focus:outline-none focus:ring-2 focus:ring-[#00a884]">
         <button id="btn-guardar" class="w-full bg-[#00a884] hover:bg-[#008f72] text-[#111b21] font-bold p-3 rounded-lg transition">Ingresar</button>
     </div>
@@ -51,7 +50,7 @@
         <div class="flex-1 flex flex-col bg-[#222e35] bg-opacity-20" id="pantalla-chat-vacia">
             <div class="m-auto text-center max-w-sm">
                 <h3 class="text-xl font-semibold text-gray-300">WasaPedro En Línea</h3>
-                <p class="text-sm text-gray-500 mt-2">Selecciona un chat guardado de la barra lateral para ver tu historial.</p>
+                <p class="text-sm text-gray-500 mt-2">Los mensajes enviados mientras estabas desconectado aparecerán aquí al abrir la app.</p>
             </div>
         </div>
 
@@ -70,7 +69,6 @@
     </div>
 
     <script>
-        // Inicializamos variables desde memoria local limpia
         let miNombre = localStorage.getItem("wasapedro_mqtt_name") || "";
         let clienteMqtt = null;
         let chatActivo = null;
@@ -79,7 +77,6 @@
         let historialesDeChats = JSON.parse(localStorage.getItem("wasapedro_historiales")) || {};
         let notificacionesPendientes = {};
 
-        // Si el usuario ya se había registrado antes, saltamos la bienvenida de forma forzada
         if (miNombre) {
             document.getElementById("pantalla-registro").classList.add("hidden");
             document.getElementById("interfaz-principal").classList.remove("hidden");
@@ -104,14 +101,18 @@
         });
 
         function conectarServidorCloud() {
-            // Conexión limpia y directa mediante WebSockets estables
-            clienteMqtt = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
+            // CONFIGURACIÓN CLAVE: clean: false y un clientId único le dicen al servidor que guarde nuestros mensajes si nos desconectamos
+            const opcionesMqtt = {
+                clientId: "wasapedro_client_v3_" + miNombre,
+                clean: false
+            };
+
+            clienteMqtt = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', opcionesMqtt);
 
             clienteMqtt.on('connect', () => {
-                // Nos suscribimos a nuestro canal de recepción único
-                clienteMqtt.subscribe(`wasapedro/v2/chat/${miNombre}`);
+                // qos: 1 obliga al servidor a guardar los mensajes offline en su base de datos temporal
+                clienteMqtt.subscribe(`wasapedro/v3/chat/${miNombre}`, { qos: 1 });
                 
-                // Forzar dibujo inmediato de los chats viejos guardados al abrir la web
                 actualizarListaAmigosUI();
                 actualizarBuzonNotificacionesUI();
             });
@@ -122,7 +123,6 @@
                 if (data.emisor && data.texto) {
                     const deQuien = data.emisor;
 
-                    // Si no estaba en nuestra barra lateral, guardarlo permanentemente
                     if (!listaAmigosActivos.includes(deQuien)) {
                         listaAmigosActivos.push(deQuien);
                         localStorage.setItem("wasapedro_amigos_list", JSON.stringify(listaAmigosActivos));
@@ -131,24 +131,23 @@
 
                     if (!historialesDeChats[deQuien]) historialesDeChats[deQuien] = [];
                     
-                    // Comprobar duplicados para evitar fallos de red
-                    const yaExiste = historialesDeChats[deQuien].some(m => m.texto === data.texto && m.idMsg === data.idMsg);
+                    // Verificación estricta de ID para que los mensajes retenidos no se dupliquen al abrir la app
+                    const yaExiste = historialesDeChats[deQuien].some(m => m.idMsg === data.idMsg);
                     if (!yaExiste) {
                         historialesDeChats[deQuien].push({ soyYo: false, texto: data.texto, idMsg: data.idMsg });
                         localStorage.setItem("wasapedro_historiales", JSON.stringify(historialesDeChats));
-                    }
-
-                    if (chatActivo === deQuien) {
-                        dibujarBurbuja(data.texto, false);
-                    } else {
-                        notificacionesPendientes[deQuien] = (notificacionesPendientes[deQuien] || 0) + 1;
-                        actualizarBuzonNotificacionesUI();
+                        
+                        if (chatActivo === deQuien) {
+                            dibujarBurbuja(data.texto, false);
+                        } else {
+                            notificacionesPendientes[deQuien] = (notificacionesPendientes[deQuien] || 0) + 1;
+                            actualizarBuzonNotificacionesUI();
+                        }
                     }
                 }
             });
         }
 
-        // --- BUSCADOR / GENERADOR DE CANAL ---
         document.getElementById("btn-buscar").addEventListener("click", () => {
             const nombreAmigo = document.getElementById("input-buscar").value.trim().toLowerCase();
             if (!nombreAmigo || nombreAmigo === miNombre) return alert("Nombre inválido.");
@@ -193,7 +192,7 @@
                     const div = document.createElement("div");
                     div.className = "flex justify-between items-center bg-[#202d33] p-2 rounded mt-1 border-l-4 border-[#00a884]";
                     div.innerHTML = `
-                        <span>📩 <strong>${amigo}</strong> enviado nuevo mensaje</span>
+                        <span>📩 <strong>${amigo}</strong> te dejó un mensaje</span>
                         <button onclick="abrirChat('${amigo}')" class="bg-[#00a884] text-black px-2 py-0.5 rounded font-bold text-[10px]">Ver</button>
                     `;
                     contenedor.appendChild(div);
@@ -227,13 +226,12 @@
             const texto = input.value.trim();
             if (!texto || !chatActivo || !clienteMqtt) return;
 
-            const idMensajeUnico = miNombre + "_" + Date.now();
+            const idMensajeUnico = miNombre + "_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
             const payload = { emisor: miNombre, texto: texto, idMsg: idMensajeUnico };
 
-            // Publicamos al canal de nuestro amigo
-            clienteMqtt.publish(`wasapedro/v2/chat/${chatActivo}`, JSON.stringify(payload));
+            // Forzamos QoS 1 al publicar para que viaje de forma segura por internet
+            clienteMqtt.publish(`wasapedro/v3/chat/${chatActivo}`, JSON.stringify(payload), { qos: 1 });
 
-            // Respaldamos en el disco de nuestra Chromebook
             if (!historialesDeChats[chatActivo]) historialesDeChats[chatActivo] = [];
             historialesDeChats[chatActivo].push({ soyYo: true, texto: texto, idMsg: idMensajeUnico });
             localStorage.setItem("wasapedro_historiales", JSON.stringify(historialesDeChats));
