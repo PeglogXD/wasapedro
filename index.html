@@ -3,30 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WasaPedro Custom Pro</title>
+    <title>WasaPedro Ultimate</title>
     <link rel="manifest" href="manifest.json"> 
-    
-    <!-- ESTA ETIQUETA CONTROLA LA BARRA QUE SE VE EN TU IMAGEN -->
     <meta name="theme-color" id="meta-theme" content="#00a884">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body class="h-screen w-screen flex flex-col items-center justify-center p-4 bg-[#0b141a] text-[#e9edef] font-sans">
 
-    <!-- 1. PANTALLA DE BIENVENIDA -->
     <div id="pantalla-registro" class="bg-[#111b21] p-8 rounded-2xl shadow-2xl border border-[#222e35] max-w-sm w-full text-center">
         <h1 class="text-3xl font-extrabold text-[#00a884] mb-2 theme-text">WasaPedro</h1>
         <p class="text-gray-400 text-sm mb-6">Ingresa tu nombre único de usuario.</p>
-        <input type="text" id="input-nombre" placeholder="Tu nombre..." class="w-full bg-[#2a3942] border-none text-white rounded-lg p-3 mb-4 focus:outline-none focus:ring-2 focus:ring-[#00a884]">
-        <button id="btn-guardar" class="w-full bg-[#00a884] theme-bg hover:opacity-90 text-[#111b21] font-bold p-3 rounded-lg transition">Ingresar</button>
+        <input type="text" id="input-nombre" placeholder="Tu nombre..." class="w-full bg-[#2a3942] border-none text-white rounded-lg p-3 mb-2 focus:outline-none focus:ring-2 focus:ring-[#00a884]">
+        <p id="error-registro" class="text-xs text-red-400 mb-4 h-4 italic hidden">Este nombre ya está en uso. Elige otro.</p>
+        <button id="btn-guardar" class="w-full bg-[#00a884] theme-bg hover:opacity-90 text-[#111b21] font-bold p-3 rounded-lg transition disabled:opacity-50">Ingresar</button>
     </div>
 
-    <!-- 2. INTERFAZ PRINCIPAL -->
     <div id="interfaz-principal" class="w-full max-w-4xl h-[85vh] bg-[#111b21] rounded-2xl shadow-2xl border border-[#222e35] flex overflow-hidden hidden">
         
-        <!-- BARRA LATERAL -->
         <div class="w-1/3 border-r border-[#222e35] flex flex-col bg-[#111b21]">
             <div class="p-4 bg-[#202d33] flex justify-between items-center">
                 <div class="flex items-center gap-3">
@@ -38,7 +33,6 @@
                 </button>
             </div>
 
-            <!-- Buscador Permanente -->
             <div class="p-3 bg-[#111b21] border-b border-[#222e35]">
                 <div class="flex flex-col gap-2 bg-[#202d33] rounded-lg p-2">
                     <input type="text" id="input-buscar" placeholder="Escribe el nombre de tu amigo..." class="bg-transparent text-xs w-full focus:outline-none text-white placeholder-gray-400">
@@ -46,7 +40,6 @@
                 </div>
             </div>
 
-            <!-- Buzón de Alertas Recientes -->
             <div class="p-4 border-b border-[#222e35] bg-[#182229]">
                 <h2 class="text-xs font-bold tracking-wider text-gray-400 uppercase mb-2">Mensajes sin leer</h2>
                 <div id="lista-notificaciones" class="space-y-1 text-xs max-h-24 overflow-y-auto">
@@ -54,22 +47,19 @@
                 </div>
             </div>
 
-            <!-- Lista de Chats Guardados -->
             <div class="flex-1 overflow-y-auto p-2 space-y-1" id="lista-amigos">
                 <h2 class="text-xs font-bold tracking-wider text-gray-400 uppercase p-2">Mis Chats Guardados</h2>
                 <div id="contenedor-lista-dinamica" class="space-y-1"></div>
             </div>
         </div>
 
-        <!-- VENTANA DE CHAT VACÍA -->
         <div class="flex-1 flex flex-col bg-[#222e35] bg-opacity-20" id="pantalla-chat-vacia">
             <div class="m-auto text-center max-w-sm">
-                <h3 class="text-xl font-semibold text-gray-300">WasaPedro Custom</h3>
-                <p class="text-sm text-gray-500 mt-2">Configura tus temas y administra tus contactos desde el menú lateral.</p>
+                <h3 class="text-xl font-semibold text-gray-300">WasaPedro Ultimate</h3>
+                <p class="text-sm text-gray-500 mt-2">Ahora puedes enviar fotos, imágenes y archivos de cualquier tipo de forma segura.</p>
             </div>
         </div>
 
-        <!-- VENTANA DE CHAT ACTIVA -->
         <div class="flex-1 flex flex-col bg-[#0b141a] hidden" id="pantalla-chat-activa">
             <div class="p-4 bg-[#202d33] flex items-center justify-between border-b border-[#222e35]">
                 <div class="flex items-center gap-3">
@@ -78,7 +68,13 @@
                 </div>
             </div>
             <div class="flex-1 overflow-y-auto p-4 space-y-3" id="contenedor-mensajes"></div>
-            <div class="p-4 bg-[#202d33] flex gap-3 items-center">
+            
+            <div class="p-4 bg-[#202d33] flex gap-3 items-center relative">
+                <input type="file" id="input-archivo" class="hidden" onchange="procesarArchivoAdjunto(this)">
+                <button onclick="document.getElementById('input-archivo').click()" class="text-2xl text-gray-400 hover:text-white transition p-1">
+                    <i class="ph ph-paperclip"></i>
+                </button>
+                
                 <input type="text" id="input-mensaje" placeholder="Escribe un mensaje..." class="flex-1 bg-[#2a3942] rounded-lg p-3 text-sm text-white focus:outline-none">
                 <button id="btn-enviar" class="bg-[#00a884] theme-bg text-[#111b21] font-bold px-5 py-3 rounded-lg text-sm hover:opacity-90">Enviar</button>
             </div>
@@ -86,15 +82,12 @@
 
     </div>
 
-    <!-- MODAL DE CONFIGURACIÓN -->
     <div id="modal-config" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-md rounded-2xl p-6 shadow-2xl">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold text-white flex items-center gap-2"><i class="ph ph-gear"></i> Ajustes Personalizados</h2>
                 <button id="btn-cerrar-config" class="text-gray-400 hover:text-white text-lg"><i class="ph ph-x"></i></button>
             </div>
-            
-            <!-- Colores -->
             <div class="mb-6">
                 <label class="text-xs font-bold uppercase tracking-wider text-gray-400 block mb-3">Color de la interfaz</label>
                 <div class="grid grid-cols-4 gap-2">
@@ -104,8 +97,6 @@
                     <button onclick="cambiarTema('#ef4444')" class="w-full h-10 bg-[#ef4444] rounded-lg font-bold text-xs text-white flex items-center justify-center">Rojo</button>
                 </div>
             </div>
-
-            <!-- Bloqueados -->
             <div>
                 <label class="text-xs font-bold uppercase tracking-wider text-gray-400 block mb-2">Contactos Bloqueados</label>
                 <div id="contenedor-bloqueados" class="bg-[#182229] border border-[#222e35] rounded-xl p-3 max-h-40 overflow-y-auto space-y-2"></div>
@@ -126,6 +117,24 @@
         let notificacionesPendientes = {};
         let temaActual = localStorage.getItem("wasapedro_theme_color") || "#00a884";
 
+        // Conexión inicial especial para verificar o escuchar peticiones de nombres ocupados
+        const clienteValidacion = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
+        
+        clienteValidacion.on('connect', () => {
+            if (miNombre) {
+                // Si ya estoy registrado, escucho si alguien intenta robarme el nombre
+                clienteValidacion.subscribe(`wasapedro/v3/verificar/${miNombre}`);
+            }
+        });
+
+        clienteValidacion.on('message', (topico, mensaje) => {
+            const data = JSON.parse(mensaje.toString());
+            // Si alguien pregunta por mi nombre, yo respondo de inmediato: "¡Ey! Yo estoy vivo aquí"
+            if (topico === `wasapedro/v3/verificar/${miNombre}` && data.accion === "pregunta") {
+                clienteValidacion.publish(`wasapedro/v3/verificar/${miNombre}`, JSON.stringify({ accion: "respuesta_ocupado" }));
+            }
+        });
+
         if (miNombre) {
             document.getElementById("pantalla-registro").classList.add("hidden");
             document.getElementById("interfaz-principal").classList.remove("hidden");
@@ -135,12 +144,52 @@
             conectarServidorCloud();
         }
 
+        // --- SISTEMA ANTI-DUPLICADO DE NOMBRES ---
         document.getElementById("btn-guardar").addEventListener("click", () => {
-            const nombre = document.getElementById("input-nombre").value.trim().toLowerCase();
-            if (nombre.length < 2) return alert("Nombre muy corto.");
-            miNombre = nombre;
-            localStorage.setItem("wasapedro_mqtt_name", miNombre);
-            location.reload();
+            const nombreIngresado = document.getElementById("input-nombre").value.trim().toLowerCase();
+            const btn = document.getElementById("btn-guardar");
+            const txtError = document.getElementById("error-registro");
+
+            if (nombreIngresado.length < 2) return alert("Nombre muy corto.");
+            
+            btn.disabled = true;
+            btn.textContent = "Verificando disponibilidad...";
+            txtError.classList.add("hidden");
+
+            let nombreOcupado = false;
+
+            // Escuchar la respuesta en el canal del nombre solicitado
+            const subCanal = `wasapedro/v3/verificar/${nombreIngresado}`;
+            clienteValidacion.subscribe(subCanal);
+
+            const manejarVerificacion = (topico, mensaje) => {
+                const data = JSON.parse(mensaje.toString());
+                if (topico === subCanal && data.accion === "respuesta_ocupado") {
+                    nombreOcupado = true;
+                }
+            };
+
+            clienteValidacion.on('message', manejarVerificacion);
+
+            // Lanzar la pregunta al universo MQTT
+            clienteValidacion.publish(subCanal, JSON.stringify({ accion: "pregunta" }));
+
+            // Esperar 2 segundos exactos a ver si el usuario original responde
+            setTimeout(() => {
+                clienteValidacion.unsubscribe(subCanal);
+                clienteValidacion.off('message', manejarVerificacion);
+
+                if (nombreOcupado) {
+                    btn.disabled = false;
+                    btn.textContent = "Ingresar";
+                    txtError.classList.remove("hidden");
+                } else {
+                    // Si nadie respondió, el nombre es tuyo
+                    miNombre = nombreIngresado;
+                    localStorage.setItem("wasapedro_mqtt_name", miNombre);
+                    location.reload();
+                }
+            }, 2000);
         });
 
         function conectarServidorCloud() {
@@ -155,7 +204,7 @@
 
             clienteMqtt.on('message', (topico, mensaje) => {
                 const data = JSON.parse(mensaje.toString());
-                if (data.emisor && data.texto) {
+                if (data.emisor && (data.texto || data.archivo)) {
                     const deQuien = data.emisor;
                     if (listaBloqueados.includes(deQuien)) return;
 
@@ -169,11 +218,12 @@
                     
                     const yaExiste = historialesDeChats[deQuien].some(m => m.idMsg === data.idMsg);
                     if (!yaExiste) {
-                        historialesDeChats[deQuien].push({ soyYo: false, texto: data.texto, idMsg: data.idMsg });
+                        // Guardar ya sea texto o datos de archivo adjunto
+                        historialesDeChats[deQuien].push({ soyYo: false, texto: data.texto, archivo: data.archivo, nombreArchivo: data.nombreArchivo, idMsg: data.idMsg });
                         localStorage.setItem("wasapedro_historiales", JSON.stringify(historialesDeChats));
                         
                         if (chatActivo === deQuien) {
-                            dibujarBurbuja(data.texto, false);
+                            dibujarBurbuja(data.texto, false, data.archivo, data.nombreArchivo);
                         } else {
                             notificacionesPendientes[deQuien] = (notificacionesPendientes[deQuien] || 0) + 1;
                             actualizarBuzonNotificacionesUI();
@@ -183,16 +233,92 @@
             });
         }
 
+        // --- SISTEMA DE ENVÍO DE ARCHIVOS ---
+        function procesarArchivoAdjunto(elemento) {
+            const archivo = elemento.files[0];
+            if (!archivo) return;
+
+            // Restricción de tamaño prudente para broker público (aprox 1.5MB)
+            if (archivo.size > 1500000) {
+                alert("El archivo es demasiado grande. Elige uno menor a 1.5 MB.");
+                return;
+            }
+
+            const lector = new FileReader();
+            lector.onload = function(evento) {
+                const base64Data = evento.target.result;
+                enviarMensajeServidor("", base64Data, archivo.name);
+            };
+            lector.readAsDataURL(archivo);
+            elemento.value = ""; // Limpiar input
+        }
+
+        function enviarMensaje() {
+            const input = document.getElementById("input-mensaje");
+            const texto = input.value.trim();
+            if (!texto) return;
+            enviarMensajeServidor(texto, null, null);
+            input.value = "";
+        }
+
+        function enviarMensajeServidor(texto, archivoBase64, nombreArch) {
+            if (!chatActivo || !clienteMqtt) return;
+
+            const idMensajeUnico = miNombre + "_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+            const payload = { emisor: miNombre, texto: texto, archivo: archivoBase64, nombreArchivo: nombreArch, idMsg: idMensajeUnico };
+
+            clienteMqtt.publish(`wasapedro/v3/chat/${chatActivo}`, JSON.stringify(payload), { qos: 1 });
+
+            if (!historialesDeChats[chatActivo]) historialesDeChats[chatActivo] = [];
+            historialesDeChats[chatActivo].push({ soyYo: true, texto: texto, archivo: archivoBase64, nombreArchivo: nombreArch, idMsg: idMensajeUnico });
+            localStorage.setItem("wasapedro_historiales", JSON.stringify(historialesDeChats));
+
+            dibujarBurbuja(texto, true, archivoBase64, nombreArch);
+        }
+
+        function dibujarBurbuja(texto, soyYo, archivoBase64, nombreArch) {
+            const contenedor = document.getElementById("contenedor-mensajes");
+            const div = document.createElement("div");
+            div.className = `flex ${soyYo ? 'justify-end' : 'justify-start'}`;
+            
+            const backgroundBurbuja = soyYo ? temaActual : '#202d33';
+            const colorTexto = soyYo && (temaActual === '#00a884') ? 'text-black font-medium' : 'text-white';
+
+            let contenidoHtml = "";
+
+            if (archivoBase64) {
+                // Si es una imagen común, la mostramos directamente en el chat
+                if (archivoBase64.startsWith("data:image/")) {
+                    contenidoHtml = `<img src="${archivoBase64}" class="rounded-lg max-w-[200px] h-auto block mb-1 shadow">`;
+                } else {
+                    // Si es cualquier otro archivo, dibujamos un botón de descarga universal
+                    contenidoHtml = `
+                        <div class="flex items-center gap-2 p-1 bg-black/20 rounded-md mb-1">
+                            <i class="ph ph-file-text text-xl"></i>
+                            <span class="text-xs truncate max-w-[130px] inline-block">${nombreArch}</span>
+                        </div>
+                        <a href="${archivoBase64}" download="${nombreArch}" class="text-[10px] underline block text-right font-bold opacity-80 hover:opacity-100">Descargar archivo</a>
+                    `;
+                }
+            }
+
+            if (texto) {
+                contenidoHtml += `<div>${texto}</div>`;
+            }
+
+            div.innerHTML = `<div class="max-w-xs rounded-xl p-3 text-sm shadow ${colorTexto}" style="background-color: ${backgroundBurbuja}">${contenidoHtml}</div>`;
+            contenedor.appendChild(div);
+            contenedor.scrollTop = contenedor.scrollHeight;
+        }
+
+        // --- ENLACES Y LOGICA DE INTERFAZ (IGUAL A LA ANTERIOR) ---
         document.getElementById("btn-buscar").addEventListener("click", () => {
             const nombreAmigo = document.getElementById("input-buscar").value.trim().toLowerCase();
-            if (!nombreAmigo || nombreAmigo === miNombre) return alert("Nombre inválido.");
-            if (listaBloqueados.includes(nombreAmigo)) return alert("Tienes bloqueado a este usuario.");
-
+            if (!nombreAmigo || nombreAmigo === miNombre || listaBloqueados.includes(nombreAmigo)) return alert("Usuario no disponible.");
             if (!listaAmigosActivos.includes(nombreAmigo)) {
                 listaAmigosActivos.push(nombreAmigo);
                 localStorage.setItem("wasapedro_amigos_list", JSON.stringify(listaAmigosActivos));
             }
-
             actualizarListaAmigosUI();
             abrirChat(nombreAmigo);
             document.getElementById("input-buscar").value = "";
@@ -201,13 +327,10 @@
         function actualizarListaAmigosUI() {
             const contenedor = document.getElementById("contenedor-lista-dinamica");
             contenedor.innerHTML = "";
-            const visibles = listaAmigosActivos.filter(a => !listaBloqueados.includes(a));
-
-            visibles.forEach(amigo => {
+            listaAmigosActivos.filter(a => !listaBloqueados.includes(a)).forEach(amigo => {
                 const nombreAMostrar = apodosContactos[amigo] || amigo;
                 const div = document.createElement("div");
                 div.className = `flex items-center justify-between p-3 rounded-lg cursor-pointer transition ${chatActivo === amigo ? 'bg-[#2a3942]' : 'bg-[#111b21] hover:bg-[#202d33]'}`;
-                
                 div.innerHTML = `
                     <div class="flex items-center gap-3 flex-1" onclick="abrirChat('${amigo}')">
                         <div class="w-10 h-10 bg-gray-600 text-white font-bold rounded-full flex items-center justify-center text-sm">${amigo.charAt(0).toUpperCase()}</div>
@@ -216,14 +339,12 @@
                             <div class="text-xs text-gray-400">${apodosContactos[amigo] ? '@' + amigo : 'Canal guardado'}</div>
                         </div>
                     </div>
-                    <div class="relative option-dropdown">
-                        <button onclick="toggleMenuAmigo(event, '${amigo}')" class="text-gray-400 hover:text-white p-2 text-lg">
-                            <i class="ph ph-dots-three-vertical"></i>
-                        </button>
+                    <div class="relative">
+                        <button onclick="toggleMenuAmigo(event, '${amigo}')" class="text-gray-400 hover:text-white p-2 text-lg"><i class="ph ph-dots-three-vertical"></i></button>
                         <div id="menu-${amigo}" class="absolute right-0 top-10 bg-[#202d33] border border-[#222e35] rounded-xl shadow-2xl py-1 w-36 hidden z-40 text-xs">
-                            <button onclick="menuCambiarApodo('${amigo}')" class="w-full text-left px-3 py-2 hover:bg-[#2a3942] flex items-center gap-2 text-white"><i class="ph ph-pencil"></i> Poner Apodo</button>
+                            <button onclick="menuCambiarApodo('${amigo}')" class="w-full text-left px-3 py-2 hover:bg-[#2a3942] flex items-center gap-2 text-white"><i class="ph ph-pencil"></i> Apodo</button>
                             <button onclick="menuVaciarChat('${amigo}')" class="w-full text-left px-3 py-2 hover:bg-[#2a3942] flex items-center gap-2 text-yellow-500"><i class="ph ph-trash"></i> Vaciar Chat</button>
-                            <button onclick="menuBloquear('${amigo}')" class="w-full text-left px-3 py-2 hover:bg-[#2a3942] flex items-center gap-2 text-red-500 font-semibold"><i class="ph ph-prohibit"></i> Bloquear</button>
+                            <button onclick="menuBloquear('${amigo}')" class="w-full text-left px-3 py-2 hover:bg-[#2a3942] flex items-center gap-2 text-red-500"><i class="ph ph-prohibit"></i> Bloquear</button>
                         </div>
                     </div>
                 `;
@@ -233,27 +354,25 @@
 
         function toggleMenuAmigo(e, amigo) {
             e.stopPropagation();
-            const menú = document.getElementById(`menu-${amigo}`);
-            const yaAbierto = !menú.classList.contains("hidden");
-            document.querySelectorAll('[id^="menu-"]').forEach(m => m.classList.add("hidden"));
-            if (!yaAbierto) menú.classList.remove("hidden");
+            const m = document.getElementById(`menu-${amigo}`);
+            const vis = !m.classList.contains("hidden");
+            document.querySelectorAll('[id^="menu-"]').forEach(el => el.classList.add("hidden"));
+            if (!vis) m.classList.remove("hidden");
         }
 
-        document.addEventListener("click", () => {
-            document.querySelectorAll('[id^="menu-"]').forEach(m => m.classList.add("hidden"));
-        });
+        document.addEventListener("click", () => document.querySelectorAll('[id^="menu-"]').forEach(m => m.classList.add("hidden")));
 
         function menuCambiarApodo(amigo) {
-            const nuevoApodo = prompt(`Elige un apodo para ${amigo}:`, apodosContactos[amigo] || "");
-            if (nuevoApodo === null) return;
-            if (nuevoApodo.trim() === "") { delete apodosContactos[amigo]; } else { apodosContactos[amigo] = nuevoApodo.trim(); }
+            const a = prompt("Apodo para " + amigo, apodosContactos[amigo] || "");
+            if (a === null) return;
+            if (a.trim() === "") { delete apodosContactos[amigo]; } else { apodosContactos[amigo] = a.trim(); }
             localStorage.setItem("wasapedro_apodos", JSON.stringify(apodosContactos));
             actualizarListaAmigosUI();
             if(chatActivo === amigo) abrirChat(amigo);
         }
 
         function menuVaciarChat(amigo) {
-            if (confirm(`¿Vaciar conversación con ${apodosContactos[amigo] || amigo}?`)) {
+            if (confirm("¿Vaciar chat?")) {
                 historialesDeChats[amigo] = [];
                 localStorage.setItem("wasapedro_historiales", JSON.stringify(historialesDeChats));
                 if (chatActivo === amigo) abrirChat(amigo);
@@ -261,45 +380,25 @@
         }
 
         function menuBloquear(amigo) {
-            if (confirm(`¿Bloquear a ${apodosContactos[amigo] || amigo}?`)) {
-                if (!listaBloqueados.includes(amigo)) {
-                    listaBloqueados.push(amigo);
-                    localStorage.setItem("wasapedro_bloqueados", JSON.stringify(listaBloqueados));
-                }
-                if (chatActivo === amigo) {
-                    chatActivo = null;
-                    document.getElementById("pantalla-chat-activa").classList.add("hidden");
-                    document.getElementById("pantalla-chat-vacia").classList.remove("hidden");
-                }
+            if (confirm("¿Bloquear contacto?")) {
+                listaBloqueados.push(amigo);
+                localStorage.setItem("wasapedro_bloqueados", JSON.stringify(listaBloqueados));
+                if (chatActivo === amigo) { chatActivo = null; document.getElementById("pantalla-chat-activa").classList.add("hidden"); document.getElementById("pantalla-chat-vacia").classList.remove("hidden"); }
                 actualizarListaAmigosUI();
                 actualizarBuzonNotificacionesUI();
             }
         }
 
         const modalConfig = document.getElementById("modal-config");
-        document.getElementById("btn-config").addEventListener("click", () => {
-            dibujarListaBloqueadosUI();
-            modalConfig.classList.remove("hidden");
-        });
+        document.getElementById("btn-config").addEventListener("click", () => { dibujarListaBloqueadosUI(); modalConfig.classList.remove("hidden"); });
         document.getElementById("btn-cerrar-config").addEventListener("click", () => modalConfig.classList.add("hidden"));
 
-        function cambiarTema(hex) {
-            temaActual = hex;
-            localStorage.setItem("wasapedro_theme_color", hex);
-            aplicarColorTema(hex);
-            
-            // Si hay un chat abierto, redibujamos los globos de texto para que cambien al instante
-            if (chatActivo) abrirChat(chatActivo);
-        }
+        function cambiarTema(hex) { temaActual = hex; localStorage.setItem("wasapedro_theme_color", hex); aplicarColorTema(hex); if (chatActivo) abrirChat(chatActivo); }
 
         function aplicarColorTema(hex) {
-            // 1. CAMBIA EL COLOR DE LA BARRA NATIVA DE LA CHROMEBOOK (Muestra en image_20ace0.png)
             document.getElementById("meta-theme").setAttribute("content", hex);
-
-            // 2. Cambia los componentes de la interfaz
             document.querySelectorAll(".theme-bg").forEach(el => el.style.backgroundColor = hex);
             document.querySelectorAll(".theme-text").forEach(el => el.style.color = hex);
-            
             document.getElementById("btn-enviar").style.backgroundColor = hex;
             document.getElementById("btn-guardar").style.backgroundColor = hex;
             document.getElementById("avatar-usuario").style.backgroundColor = hex;
@@ -307,103 +406,47 @@
         }
 
         function dibujarListaBloqueadosUI() {
-            const contenedor = document.getElementById("contenedor-bloqueados");
-            contenedor.innerHTML = "";
-            if (listaBloqueados.length === 0) {
-                contenedor.innerHTML = '<p class="text-xs italic text-gray-500 text-center py-2">Ningún usuario bloqueado.</p>';
-                return;
-            }
+            const c = document.getElementById("contenedor-bloqueados"); c.innerHTML = "";
+            if (listaBloqueados.length === 0) { c.innerHTML = '<p class="text-xs italic text-gray-500 text-center py-2">Sin bloqueados.</p>'; return; }
             listaBloqueados.forEach(amigo => {
                 const div = document.createElement("div");
                 div.className = "flex justify-between items-center bg-[#202d33] p-2 rounded-lg border border-[#222e35]";
-                div.innerHTML = `
-                    <span class="text-xs font-medium text-white">${apodosContactos[amigo] || amigo}</span>
-                    <button onclick="desbloquearUsuario('${amigo}')" class="bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-1 rounded text-[10px] font-bold hover:bg-red-500 hover:text-white transition">Desbloquear</button>
-                `;
-                contenedor.appendChild(div);
+                div.innerHTML = `<span class="text-xs text-white">${apodosContactos[amigo] || amigo}</span><button onclick="desbloquearUsuario('${amigo}')" class="bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-1 rounded text-[10px] font-bold">Desbloquear</button>`;
+                c.appendChild(div);
             });
         }
 
         function desbloquearUsuario(amigo) {
             listaBloqueados = listaBloqueados.filter(u => u !== amigo);
             localStorage.setItem("wasapedro_bloqueados", JSON.stringify(listaBloqueados));
-            dibujarListaBloqueadosUI();
-            actualizarListaAmigosUI();
+            dibujarListaBloqueadosUI(); actualizarListaAmigosUI();
         }
 
         function actualizarBuzonNotificacionesUI() {
-            const contenedor = document.getElementById("lista-notificaciones");
-            contenedor.innerHTML = "";
-            let tieneAlertas = false;
-
+            const c = document.getElementById("lista-notificaciones"); c.innerHTML = ""; let t = false;
             for (const amigo in notificacionesPendientes) {
                 if (listaBloqueados.includes(amigo)) continue;
                 if (notificacionesPendientes[amigo] > 0) {
-                    tieneAlertas = true;
+                    t = true;
                     const div = document.createElement("div");
                     div.className = "flex justify-between items-center bg-[#202d33] p-2 rounded mt-1 border-l-4";
                     div.style.borderLeftColor = temaActual;
-                    div.innerHTML = `
-                        <span>📩 <strong>${apodosContactos[amigo] || amigo}</strong> envió un mensaje</span>
-                        <button onclick="abrirChat('${amigo}')" class="text-black px-2 py-0.5 rounded font-bold text-[10px]" style="background-color: ${temaActual}">Ver</button>
-                    `;
-                    contenedor.appendChild(div);
+                    div.innerHTML = `<span>📩 <strong>${apodosContactos[amigo] || amigo}</strong> envió un mensaje</span><button onclick="abrirChat('${amigo}')" class="text-black px-2 py-0.5 rounded font-bold text-[10px]" style="background-color: ${temaActual}">Ver</button>`;
+                    c.appendChild(div);
                 }
             }
-            if (!tieneAlertas) contenedor.innerHTML = '<p class="italic text-gray-500">Sin mensajes nuevos.</p>';
+            if (!t) c.innerHTML = '<p class="italic text-gray-500">Sin mensajes nuevos.</p>';
         }
 
         function abrirChat(amigo) {
-            chatActivo = amigo;
-            delete notificacionesPendientes[amigo];
-            actualizarBuzonNotificacionesUI();
-
-            document.getElementById("pantalla-chat-vacia").classList.add("hidden");
-            document.getElementById("pantalla-chat-activa").classList.remove("hidden");
-            
+            chatActivo = amigo; delete notificacionesPendientes[amigo]; actualizarBuzonNotificacionesUI();
+            document.getElementById("pantalla-chat-vacia").classList.add("hidden"); document.getElementById("pantalla-chat-activa").classList.remove("hidden");
             document.getElementById("nombre-chat-amigo").textContent = apodosContactos[amigo] || amigo;
             document.getElementById("avatar-chat").textContent = amigo.charAt(0).toUpperCase();
             document.getElementById("avatar-chat").style.backgroundColor = temaActual;
-            
-            const contenedorMsg = document.getElementById("contenedor-mensajes");
-            contenedorMsg.innerHTML = "";
-
-            const historial = historialesDeChats[amigo] || [];
-            historial.forEach(msg => dibujarBurbuja(msg.texto, msg.soyYo));
-            
+            const cM = document.getElementById("contenedor-mensajes"); cM.innerHTML = "";
+            (historialesDeChats[amigo] || []).forEach(msg => dibujarBurbuja(msg.texto, msg.soyYo, msg.archivo, msg.nombreArchivo));
             actualizarListaAmigosUI();
-        }
-
-        function enviarMensaje() {
-            const input = document.getElementById("input-mensaje");
-            const texto = input.value.trim();
-            if (!texto || !chatActivo || !clienteMqtt) return;
-
-            const idMensajeUnico = miNombre + "_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
-            const payload = { emisor: miNombre, texto: texto, idMsg: idMensajeUnico };
-
-            clienteMqtt.publish(`wasapedro/v3/chat/${chatActivo}`, JSON.stringify(payload), { qos: 1 });
-
-            if (!historialesDeChats[chatActivo]) historialesDeChats[chatActivo] = [];
-            historialesDeChats[chatActivo].push({ soyYo: true, texto: texto, idMsg: idMensajeUnico });
-            localStorage.setItem("wasapedro_historiales", JSON.stringify(historialesDeChats));
-
-            dibujarBurbuja(texto, true);
-            input.value = "";
-        }
-
-        function dibujarBurbuja(texto, soyYo) {
-            const contenedor = document.getElementById("contenedor-mensajes");
-            const div = document.createElement("div");
-            div.className = `flex ${soyYo ? 'justify-end' : 'justify-start'}`;
-            
-            // CAMBIA EL COLOR DEL GLOBO QUE TÚ ENVIAS AL COLOR DEL TEMA SELECCIONADO
-            const backgroundBurbuja = soyYo ? temaActual : '#202d33';
-            const colorTexto = soyYo && (temaActual === '#00a884') ? 'text-black font-medium' : 'text-white';
-
-            div.innerHTML = `<div class="max-w-xs rounded-xl p-3 text-sm shadow ${colorTexto}" style="background-color: ${backgroundBurbuja}">${texto}</div>`;
-            contenedor.appendChild(div);
-            contenedor.scrollTop = contenedor.scrollHeight;
         }
 
         document.getElementById("btn-enviar").addEventListener("click", enviarMensaje);
