@@ -20,8 +20,8 @@
         <p id="error-registro" class="text-xs text-red-400 mb-4 h-4 italic hidden">Este nombre ya está en uso. Elige otro.</p>
         
         <div class="bg-[#182229] p-3 rounded-xl border border-[#222e35] mb-4 text-left">
-            <label class="text-[10px] font-bold uppercase text-gray-400 block mb-1">¿Dispositivo nuevo? Pon tu Gmail vinculado:</label>
-            <input type="email" id="input-recuperar-email" placeholder="ejemplo@gmail.com (Opcional)" class="w-full bg-[#2a3942] text-xs text-white rounded p-2 focus:outline-none">
+            <label class="text-[10px] font-bold uppercase text-gray-400 block mb-1">¿Dispositivo nuevo? Pon tu correo vinculado:</label>
+            <input type="email" id="input-recuperar-email" placeholder="correo@institucion.edu (Opcional)" class="w-full bg-[#2a3942] text-xs text-white rounded p-2 focus:outline-none">
         </div>
 
         <button id="btn-guardar" class="w-full bg-[#00a884] theme-bg hover:opacity-90 text-[#111b21] font-bold p-3 rounded-lg transition disabled:opacity-50">Ingresar / Restaurar</button>
@@ -63,7 +63,7 @@
         <div class="flex-1 flex flex-col bg-[#222e35] bg-opacity-20" id="pantalla-chat-vacia">
             <div class="m-auto text-center max-w-sm">
                 <h3 class="text-xl font-semibold text-gray-300">WasaPedro Cloud Sync</h3>
-                <p class="text-sm text-gray-500 mt-2">Vincula tu cuenta de Gmail desde Ajustes para respaldar y transferir tus chats a otros dispositivos.</p>
+                <p class="text-sm text-gray-500 mt-2">Vincula tu cuenta de correo desde Ajustes para respaldar y transferir tus chats a otros dispositivos.</p>
             </div>
         </div>
 
@@ -105,13 +105,13 @@
                 <label class="text-xs font-bold uppercase tracking-wider text-[#00a884] theme-text block mb-2 flex items-center gap-1">
                     <i class="ph ph-user-circle-gear text-base"></i> Cuenta y Sincronización Cloud
                 </label>
-                <p class="text-gray-400 text-[11px] mb-3">Vincula tu Gmail para guardar tu lista de amigos, apodos y mensajes en la nube de forma segura.</p>
+                <p class="text-gray-400 text-[11px] mb-3">Vincula tu correo para guardar tu lista de amigos, apodos y mensajes en la nube de forma segura.</p>
                 
                 <div class="space-y-3">
                     <div>
-                        <span class="text-[10px] text-gray-400 block mb-1">Correo de Gmail Vinculado:</span>
+                        <span class="text-[10px] text-gray-400 block mb-1">Correo Vinculado:</span>
                         <div class="flex gap-2">
-                            <input type="email" id="input-cuenta-gmail" placeholder="tu-correo@gmail.com" class="flex-1 bg-[#2a3942] text-xs p-2 rounded text-white focus:outline-none">
+                            <input type="email" id="input-cuenta-gmail" placeholder="tu-correo@ejemplo.com" class="flex-1 bg-[#2a3942] text-xs p-2 rounded text-white focus:outline-none">
                             <button onclick="guardarCorreoVinculado()" class="bg-[#202d33] text-white border border-gray-600 px-3 rounded text-xs hover:bg-[#2a3942]">Vincular</button>
                         </div>
                     </div>
@@ -162,18 +162,17 @@
         
         clienteValidacion.on('connect', () => {
             if (miNombre) { clienteValidacion.subscribe(`wasapedro/v3/verificar/${miNombre}`); }
-        </script>
-        <script>
-            // Escucha peticiones de validación de usuario ocupado
-            clienteValidacion.on('message', (topico, mensaje) => {
+        });
+
+        clienteValidacion.on('message', (topico, mensaje) => {
+            try {
                 const data = JSON.parse(mensaje.toString());
                 if (topico === `wasapedro/v3/verificar/${miNombre}` && data.accion === "pregunta") {
                     clienteValidacion.publish(`wasapedro/v3/verificar/${miNombre}`, JSON.stringify({ accion: "respuesta_ocupado" }));
                 }
-            });
-        </script>
+            } catch(e) {}
+        });
 
-        <script>
         if (miNombre) {
             document.getElementById("pantalla-registro").classList.add("hidden");
             document.getElementById("interfaz-principal").classList.remove("hidden");
@@ -185,7 +184,7 @@
             inicializarEventosArrastrarArchivos();
         }
 
-        // --- SISTEMA DE INICIO DE SESIÓN / RESTAURACIÓN CLOUD ---
+        // --- INICIO DE SESIÓN Y RESTAURACIÓN ---
         document.getElementById("btn-guardar").addEventListener("click", () => {
             const nombreIngresado = document.getElementById("input-nombre").value.trim().toLowerCase();
             const emailRecuperar = document.getElementById("input-recuperar-email").value.trim().toLowerCase();
@@ -195,10 +194,9 @@
             if (nombreIngresado.length < 2) return alert("Nombre muy corto.");
             
             btn.disabled = true;
-            btn.textContent = "Verificando credenciales...";
+            btn.textContent = "Buscando respaldo...";
             txtError.classList.add("hidden");
 
-            // Si ingresó correo para restaurar, intentamos descargar primero antes de validar si está duplicado
             if (emailRecuperar.length > 5) {
                 const canalBackup = `wasapedro/v3/backup/${btoa(emailRecuperar)}`;
                 clienteValidacion.subscribe(canalBackup);
@@ -206,23 +204,23 @@
                 let backupRecibido = false;
                 const escucharBackup = (topico, mensaje) => {
                     if (topico === canalBackup) {
-                        const data = JSON.parse(mensaje.toString());
-                        if (data.usuario === nombreIngresado && data.payload) {
-                            backupRecibido = true;
-                            // Restaurar datos guardados en el nuevo dispositivo
-                            const res = JSON.parse(data.payload);
-                            localStorage.setItem("wasapedro_amigos_list", JSON.stringify(res.amigos || []));
-                            localStorage.setItem("wasapedro_historiales", JSON.stringify(res.historiales || {}));
-                            localStorage.setItem("wasapedro_apodos", JSON.stringify(res.apodos || {}));
-                            localStorage.setItem("wasapedro_bloqueados", JSON.stringify(res.bloqueados || []));
-                            localStorage.setItem("wasapedro_theme_color", res.tema || "#00a884");
-                            localStorage.setItem("wasapedro_gmail_link", emailRecuperar);
-                        }
+                        try {
+                            const data = JSON.parse(mensaje.toString());
+                            if (data.usuario === nombreIngresado && data.payload) {
+                                backupRecibido = true;
+                                const res = JSON.parse(data.payload);
+                                localStorage.setItem("wasapedro_amigos_list", JSON.stringify(res.amigos || []));
+                                localStorage.setItem("wasapedro_historiales", JSON.stringify(res.historiales || {}));
+                                localStorage.setItem("wasapedro_apodos", JSON.stringify(res.apodos || {}));
+                                localStorage.setItem("wasapedro_bloqueados", JSON.stringify(res.bloqueados || []));
+                                localStorage.setItem("wasapedro_theme_color", res.tema || "#00a884");
+                                localStorage.setItem("wasapedro_gmail_link", emailRecuperar);
+                            }
+                        } catch(e){}
                     }
                 };
 
                 clienteValidacion.on('message', escucharBackup);
-                // Pedir el backup a la nube publica
                 clienteValidacion.publish(canalBackup, JSON.stringify({ accion: "solicitar_backup", usuario: nombreIngresado }));
 
                 setTimeout(() => {
@@ -232,13 +230,13 @@
                     if (backupRecibido) {
                         miNombre = nombreIngresado;
                         localStorage.setItem("wasapedro_mqtt_name", miNombre);
-                        alert("¡Cuenta restaurada con éxito desde la nube!");
+                        alert("¡Cuenta e historial restaurados desde la nube!");
                         location.reload();
                     } else {
-                        // Si no encontró copia, valida si el nombre está libre normalmente
+                        // Si no había copia guardada con ese correo, intenta crear el usuario de forma normal
                         verificarNombreLibreYRegistrar(nombreIngresado, emailRecuperar, btn, txtError);
                     }
-                }, 2500);
+                }, 2000);
 
             } else {
                 verificarNombreLibreYRegistrar(nombreIngresado, "", btn, txtError);
@@ -251,8 +249,10 @@
             clienteValidacion.subscribe(subCanal);
 
             const manejarVerificacion = (topico, mensaje) => {
-                const data = JSON.parse(mensaje.toString());
-                if (topico === subCanal && data.accion === "respuesta_ocupado") nombreOcupado = true;
+                try {
+                    const data = JSON.parse(mensaje.toString());
+                    if (topico === subCanal && data.accion === "respuesta_ocupado") nombreOcupado = true;
+                } catch(e){}
             };
             clienteValidacion.on('message', manejarVerificacion);
             clienteValidacion.publish(subCanal, JSON.stringify({ accion: "pregunta" }));
@@ -271,25 +271,24 @@
                     if (email) localStorage.setItem("wasapedro_gmail_link", email);
                     location.reload();
                 }
-            }, 2000);
+            }, 1500);
         }
 
-        // --- FUNCIONES INTERNAS DE LA SECCIÓN DE CUENTA ---
+        // --- SISTEMA CLOUD EN CONFIGURACIÓN ---
         function guardarCorreoVinculado() {
             const mail = document.getElementById("input-cuenta-gmail").value.trim().toLowerCase();
-            if (mail.length < 5 || !mail.includes("@")) return alert("Ingresa un correo de Gmail válido.");
+            if (mail.length < 5 || !mail.includes("@")) return alert("Ingresa un correo válido.");
             gmailVinculado = mail;
             localStorage.setItem("wasapedro_gmail_link", gmailVinculado);
-            document.getElementById("status-cloud").textContent = "Gmail vinculado localmente.";
+            document.getElementById("status-cloud").textContent = "Correo vinculado localmente.";
             setTimeout(() => document.getElementById("status-cloud").textContent = "", 3000);
         }
 
         function subirCopiaNube() {
-            if (!gmailVinculado) return alert("Primero debes vincular tu correo de Gmail arriba.");
+            if (!gmailVinculado) return alert("Primero debes vincular tu correo arriba.");
             const status = document.getElementById("status-cloud");
             status.textContent = "Subiendo respaldo...";
 
-            // Estructura de datos consolidada
             const copiaSeguridad = {
                 amigos: listaAmigosActivos,
                 historiales: historialesDeChats,
@@ -298,14 +297,9 @@
                 tema: temaActual
             };
 
-            // Encriptación simple en Base64 del canal usando el correo para mantenerlo privado
             const canalBackup = `wasapedro/v3/backup/${btoa(gmailVinculado)}`;
-            const payload = {
-                usuario: miNombre,
-                payload: JSON.stringify(copiaSeguridad)
-            };
+            const payload = { usuario: miNombre, payload: JSON.stringify(copiaSeguridad) };
 
-            // Publicamos con Retain = true para que el servidor MQTT recuerde la copia permanentemente en la nube
             clienteMqtt.publish(canalBackup, JSON.stringify(payload), { qos: 1, retain: true }, (err) => {
                 if (!err) {
                     status.textContent = "✅ Copia guardada en la nube con éxito.";
@@ -317,13 +311,12 @@
         }
 
         function cerrarSesionLimpiar() {
-            if (confirm("¿Estás seguro de cerrar sesión? Se borrarán los datos locales de esta Chromebook (asegúrate de haber guardado en la nube primero).")) {
+            if (confirm("¿Cerrar sesión? Se borrarán los datos locales de este dispositivo.")) {
                 localStorage.clear();
                 location.reload();
             }
         }
 
-        // Sincronización automática de recepción: un script en segundo plano para responder peticiones de backup si otro dispositivo lo solicita y este está encendido
         function conectarServidorCloud() {
             const opcionesMqtt = { clientId: "wasapedro_client_v3_" + miNombre, clean: false };
             clienteMqtt = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', opcionesMqtt);
@@ -331,7 +324,6 @@
             clienteMqtt.on('connect', () => {
                 clienteMqtt.subscribe(`wasapedro/v3/chat/${miNombre}`, { qos: 1 });
                 if (gmailVinculado) {
-                    // Escuchar peticiones de restauración por si acaso
                     clienteMqtt.subscribe(`wasapedro/v3/backup/${btoa(gmailVinculado)}`);
                 }
                 actualizarListaAmigosUI();
@@ -339,41 +331,40 @@
             });
 
             clienteMqtt.on('message', (topico, mensaje) => {
-                // Responder a peticiones si se solicita de forma manual desde el login
-                if (gmailVinculado && topico === `wasapedro/v3/backup/${btoa(gmailVinculado)}`) {
+                try {
+                    if (gmailVinculado && topico === `wasapedro/v3/backup/${btoa(gmailVinculado)}`) {
+                        const data = JSON.parse(mensaje.toString());
+                        if (data.accion === "solicitar_backup" && data.usuario === miNombre) {
+                            subirCopiaNube();
+                        }
+                        return;
+                    }
+
                     const data = JSON.parse(mensaje.toString());
-                    if (data.accion === "solicitar_backup" && data.usuario === miNombre) {
-                        // Devolver datos guardados actuales
-                        subirCopiaNube();
-                    }
-                    return;
-                }
+                    if (data.emisor && (data.texto || data.archivo)) {
+                        const deQuien = data.emisor;
+                        if (listaBloqueados.includes(deQuien)) return;
 
-                // Manejo estándar de chats entrantes
-                const data = JSON.parse(mensaje.toString());
-                if (data.emisor && (data.texto || data.archivo)) {
-                    const deQuien = data.emisor;
-                    if (listaBloqueados.includes(deQuien)) return;
+                        if (!listaAmigosActivos.includes(deQuien)) {
+                            listaAmigosActivos.push(deQuien);
+                            localStorage.setItem("wasapedro_amigos_list", JSON.stringify(listaAmigosActivos));
+                            actualizarListaAmigosUI();
+                        }
 
-                    if (!listaAmigosActivos.includes(deQuien)) {
-                        listaAmigosActivos.push(deQuien);
-                        localStorage.setItem("wasapedro_amigos_list", JSON.stringify(listaAmigosActivos));
-                        actualizarListaAmigosUI();
+                        if (!historialesDeChats[deQuien]) historialesDeChats[deQuien] = [];
+                        const yaExiste = historialesDeChats[deQuien].some(m => m.idMsg === data.idMsg);
+                        if (!yaExiste) {
+                            historialesDeChats[deQuien].push({ soyYo: false, texto: data.texto, archivo: data.archivo, nombreArchivo: data.nombreArchivo, idMsg: data.idMsg });
+                            localStorage.setItem("wasapedro_historiales", JSON.stringify(historialesDeChats));
+                            if (chatActivo === deQuien) dibujarBurbuja(data.texto, false, data.archivo, data.nombreArchivo);
+                            else { notificacionesPendientes[deQuien] = (notificacionesPendientes[deQuien] || 0) + 1; actualizarBuzonNotificacionesUI(); }
+                        }
                     }
-
-                    if (!historialesDeChats[deQuien]) historialesDeChats[deQuien] = [];
-                    const yaExiste = historialesDeChats[deQuien].some(m => m.idMsg === data.idMsg);
-                    if (!yaExiste) {
-                        historialesDeChats[deQuien].push({ soyYo: false, texto: data.texto, archivo: data.archivo, nombreArchivo: data.nombreArchivo, idMsg: data.idMsg });
-                        localStorage.setItem("wasapedro_historiales", JSON.stringify(historialesDeChats));
-                        if (chatActivo === deQuien) dibujarBurbuja(data.texto, false, data.archivo, data.nombreArchivo);
-                        else { notificacionesPendientes[deQuien] = (notificacionesPendientes[deQuien] || 0) + 1; actualizarBuzonNotificacionesUI(); }
-                    }
-                }
+                } catch(e){}
             });
         }
 
-        // --- SISTEMA DE ARRASTRAR ARCHIVOS ---
+        // --- DRAG AND DROP ---
         function inicializarEventosArrastrarArchivos() {
             const areaDrop = document.getElementById("pantalla-chat-activa");
             const visualDrop = document.getElementById("zona-drop-visual");
@@ -536,8 +527,6 @@
                 c.appendChild(div);
             });
         }
-
-        function对外 desloguear() { cerrarSesionLimpiar(); }
 
         function desbloquearUsuario(amigo) {
             listaBloqueados = listaBloqueados.filter(u => u !== amigo); localStorage.setItem("wasapedro_bloqueados", JSON.stringify(listaBloqueados));
