@@ -946,7 +946,14 @@
                 };
                 
                 peerConnection.ontrack = e => {
-                    document.getElementById("video-remoto").srcObject = e.streams[0];
+                    const videoRemoto = document.getElementById("video-remoto");
+                    videoRemoto.srcObject = e.streams[0];
+                    
+                    // FORZAR REPRODUCCIÓN: Esto obliga al navegador a encender el video recibido
+                    videoRemoto.play().catch(err => {
+                        console.log("El navegador bloqueó el autoplay, intentando reproducir de nuevo...", err);
+                    });
+                    
                     document.getElementById("estado-llamada").textContent = "En llamada";
                 };
                 
