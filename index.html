@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WasaPedro Premium v4 Fixed</title>
+    <title>WasaPedro Premium v5 VideoCall</title>
     <link rel="manifest" href="manifest.json"> 
     <meta name="theme-color" id="meta-theme" content="#00a884">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
+    <!-- LIBRERÍA DE RECORTE (CROPPIE) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
     
     <style>
-        /* Estilos personalizados para el slider de Croppie */
         .cr-slider-path { background: #2a3942 !important; height: 6px !important; }
         .cr-slider-handle { background: #00a884 !important; border: none !important; width: 16px !important; height: 16px !important; top: -5px !important; }
         .cr-boundary { border-radius: 12px !important; overflow: hidden !important; }
@@ -22,6 +22,7 @@
 </head>
 <body class="h-screen w-screen flex flex-col items-center justify-center p-4 bg-[#0b141a] text-[#e9edef] font-sans overflow-hidden select-none">
 
+    <!-- 1. PANTALLA DE BIENVENIDA / RECUPERACIÓN -->
     <div id="pantalla-registro" class="bg-[#111b21] p-8 rounded-2xl shadow-2xl border border-[#222e35] max-w-sm w-full text-center hidden">
         <h1 class="text-3xl font-extrabold text-[#00a884] mb-2 theme-text">WasaPedro</h1>
         <p class="text-gray-400 text-sm mb-6">Ingresa tu usuario para iniciar sesión.</p>
@@ -37,8 +38,10 @@
         <button id="btn-guardar" class="w-full bg-[#00a884] theme-bg hover:opacity-90 text-[#111b21] font-bold p-3 rounded-lg transition disabled:opacity-50">Ingresar / Restaurar</button>
     </div>
 
+    <!-- 2. INTERFAZ PRINCIPAL -->
     <div id="interfaz-principal" class="w-full max-w-4xl h-[85vh] bg-[#111b21] rounded-2xl shadow-2xl border border-[#222e35] overflow-hidden hidden">
         
+        <!-- BARRA LATERAL -->
         <div class="w-1/3 border-r border-[#222e35] flex flex-col bg-[#111b21]">
             <div class="p-4 bg-[#202d33] flex justify-between items-center">
                 <div class="flex items-center gap-3 min-w-0">
@@ -56,6 +59,7 @@
                 </div>
             </div>
 
+            <!-- Buscador Permanente -->
             <div class="p-3 bg-[#111b21] border-b border-[#222e35]">
                 <div class="flex flex-col gap-2 bg-[#202d33] rounded-lg p-2">
                     <input type="text" id="input-buscar" placeholder="Nombre de amigo o ID de grupo..." class="bg-transparent text-xs w-full focus:outline-none text-white placeholder-gray-400">
@@ -63,6 +67,7 @@
                 </div>
             </div>
 
+            <!-- Buzón de Alertas Recientes -->
             <div class="p-4 border-b border-[#222e35] bg-[#182229]">
                 <h2 class="text-xs font-bold tracking-wider text-gray-400 uppercase mb-2">Mensajes sin leer</h2>
                 <div id="lista-notificaciones" class="space-y-1 text-xs max-h-20 overflow-y-auto">
@@ -70,19 +75,22 @@
                 </div>
             </div>
 
+            <!-- Lista de Chats Guardados Ordenados Dinámicamente -->
             <div class="flex-1 overflow-y-auto p-2 space-y-1" id="lista-amigos">
                 <h2 class="text-xs font-bold tracking-wider text-gray-400 uppercase p-2">Chats Recientes</h2>
                 <div id="contenedor-lista-dinamica" class="space-y-1"></div>
             </div>
         </div>
 
+        <!-- VENTANA DE CHAT VACÍA -->
         <div class="flex-1 flex flex-col bg-[#222e35] bg-opacity-20" id="pantalla-chat-vacia">
             <div class="m-auto text-center max-w-sm">
                 <h3 class="text-xl font-semibold text-gray-300">WasaPedro Pro Plus</h3>
-                <p class="text-sm text-gray-500 mt-2">Ahora con soporte de Grupos, Orden Dinámico por Mensaje y Foto de Perfil Cloud.</p>
+                <p class="text-sm text-gray-500 mt-2">Ahora con soporte de Grupos, Videollamadas WebRTC y Foto de Perfil Cloud.</p>
             </div>
         </div>
 
+        <!-- VENTANA DE CHAT ACTIVA -->
         <div class="flex-1 flex flex-col bg-[#0b141a] relative hidden" id="pantalla-chat-activa">
             <div id="zona-drop-visual" class="absolute inset-0 bg-[#00a884]/20 border-4 border-dashed border-[#00a884] z-50 flex flex-col items-center justify-center backdrop-blur-sm pointer-events-none transition-all duration-200 opacity-0">
                 <i class="ph ph-cloud-arrow-up text-6xl text-white mb-2 animate-bounce"></i>
@@ -98,6 +106,10 @@
                         <span id="sub-chat-info" class="text-[10px] text-gray-400 block hidden"></span>
                     </div>
                 </div>
+                <!-- BOTÓN DE VIDEOLLAMADA -->
+                <button id="btn-videollamada" onclick="iniciarVideollamada()" class="text-xl text-gray-400 hover:text-white p-2 rounded-full transition hidden" title="Iniciar Videollamada">
+                    <i class="ph ph-video-camera"></i>
+                </button>
             </div>
             
             <div class="flex-1 overflow-y-auto p-4 space-y-3" id="contenedor-mensajes"></div>
@@ -114,10 +126,11 @@
 
     </div>
 
+    <!-- MODAL DE CREACIÓN DE GRUPOS -->
     <div id="modal-grupo" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-sm rounded-2xl p-6 shadow-2xl">
             <h2 class="text-lg font-bold text-white mb-3 flex items-center gap-2"><i class="ph ph-users-three text-[#00a884] theme-text"></i> Crear Nuevo Grupo</h2>
-            <p class="text-xs text-gray-400 mb-4">Dale un nombre a tu grupo. Al crearlo, te daremos un ID único para que lo compartas con tus amigos y puedan unirse.</p>
+            <p class="text-xs text-gray-400 mb-4">Dale un nombre a tu grupo. Al crearlo, te daremos un ID único.</p>
             <input type="text" id="input-nombre-grupo" placeholder="Nombre del grupo..." class="w-full bg-[#2a3942] border-none text-sm text-white rounded-lg p-3 mb-4 focus:outline-none">
             <div class="flex gap-2 justify-end">
                 <button onclick="cerrarModalGrupo()" class="px-4 py-2 text-xs bg-transparent text-gray-400 hover:text-white">Cancelar</button>
@@ -126,6 +139,7 @@
         </div>
     </div>
 
+    <!-- MODAL DE RECORTE DE FOTO (CROPPIE) -->
     <div id="modal-crop" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-[60]">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-sm rounded-2xl p-5 shadow-2xl flex flex-col">
             <h2 class="text-sm font-bold text-white mb-4 text-center">Ajusta tu foto de perfil</h2>
@@ -139,6 +153,7 @@
         </div>
     </div>
 
+    <!-- MODAL DE CONFIGURACIÓN -->
     <div id="modal-config" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-md rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
@@ -146,6 +161,7 @@
                 <button id="btn-cerrar-config" class="text-gray-400 hover:text-white text-lg"><i class="ph ph-x"></i></button>
             </div>
 
+            <!-- SECCIÓN: CUENTA Y FOTO DE PERFIL CON CROP -->
             <div class="mb-6 p-4 bg-[#182229] border border-[#222e35] rounded-xl">
                 <label class="text-xs font-bold uppercase tracking-wider text-[#00a884] theme-text block mb-3 flex items-center gap-1">
                     <i class="ph ph-user-circle-gear text-base"></i> Cuenta y Foto de Perfil
@@ -205,6 +221,46 @@
         </div>
     </div>
 
+    <!-- 3. INTERFAZ DE INTERFAZ DE VIDEOLLAMADA (WebRTC) -->
+    <div id="modal-video" class="fixed inset-0 bg-black/95 flex flex-col items-center justify-center hidden z-[70] p-4">
+        <div class="relative w-full max-w-2xl h-[75vh] bg-[#111b21] rounded-2xl overflow-hidden border border-[#222e35] flex flex-col justify-between shadow-2xl">
+            <div class="absolute top-4 left-4 z-20 bg-black/50 backdrop-blur-md px-4 py-2 rounded-xl text-xs font-semibold text-white tracking-wide">
+                <span id="estado-llamada">Conectando canales...</span>
+            </div>
+            
+            <!-- Video Remoto -->
+            <video id="video-remoto" autoplay playsinline class="w-full h-full object-cover bg-[#0b141a]"></video>
+            
+            <!-- Video Local Flotante -->
+            <video id="video-local" autoplay playsinline muted class="absolute top-4 right-4 w-28 h-40 object-cover rounded-xl border border-white/20 shadow-2xl z-10 bg-[#2a3942]"></video>
+            
+            <!-- Controles Inferiores -->
+            <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-4 z-20">
+                <button onclick="alternarAudio()" id="btn-mutear-audio" class="w-12 h-12 rounded-full bg-[#2a3942] hover:bg-[#374c56] text-white flex items-center justify-center text-xl shadow-lg transition">
+                    <i class="ph ph-microphone"></i>
+                </button>
+                <button onclick="terminarLlamadaLocal(true)" class="w-12 h-12 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center text-xl shadow-lg transition">
+                    <i class="ph ph-phone"></i>
+                </button>
+                <button onclick="alternarVideo()" id="btn-mutear-video" class="w-12 h-12 rounded-full bg-[#2a3942] hover:bg-[#374c56] text-white flex items-center justify-center text-xl shadow-lg transition">
+                    <i class="ph ph-video-camera"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST LLAMADA ENTRANTE -->
+    <div id="modal-llamada-entrante" class="fixed bottom-4 right-4 bg-[#111b21] border border-[#222e35] p-4 rounded-2xl shadow-2xl z-[80] hidden max-w-xs w-full border-t-4 border-t-[#00a884]">
+        <div class="text-center">
+            <p class="text-[10px] text-[#00a884] font-bold uppercase tracking-wider mb-1 animate-pulse">Videollamada Entrante</p>
+            <h3 id="txt-usuario-llamando" class="text-sm font-bold text-white mb-4">...</h3>
+            <div class="flex gap-2 justify-center">
+                <button onclick="rechazarLlamadaEntrante()" class="px-4 py-2 bg-red-500/10 text-red-400 text-xs font-bold rounded-lg border border-red-500/20 hover:bg-red-500 hover:text-white transition">Rechazar</button>
+                <button onclick="aceptarLlamadaEntrante()" class="px-4 py-2 bg-[#00a884] theme-bg text-black text-xs font-bold rounded-lg hover:opacity-90 transition">Contestar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- INICIALIZACIÓN DE VARIABLES DESDE MEMORIA LOCAL ---
         let miNombre = localStorage.getItem("wasapedro_mqtt_name") || "";
@@ -224,6 +280,22 @@
         
         let notificacionesPendientes = {};
         let temaActual = localStorage.getItem("wasapedro_theme_color") || "#00a884";
+
+        // --- VARIABLES WEBRTC VIDEOLLAMADA ---
+        let localStream = null;
+        let peerConnection = null;
+        let enLlamada = false;
+        let usuarioLlamadaActual = null;
+        let ofertaRecibidaTemporal = null;
+        let audioActivo = true;
+        let videoActivo = true;
+        
+        const configWebRTC = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        };
 
         const clienteValidacion = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
         
@@ -247,8 +319,6 @@
 
             if (miNombre) {
                 pantallaRegistro.classList.add("hidden");
-                pantallaRegistro.classList.remove("block", "flex");
-
                 interfazPrincipal.classList.remove("hidden");
                 interfazPrincipal.classList.add("flex");
                 
@@ -262,8 +332,6 @@
                 inicializarEventosArrastrarArchivos();
             } else {
                 interfazPrincipal.classList.add("hidden");
-                interfazPrincipal.classList.remove("flex", "block");
-
                 pantallaRegistro.classList.remove("hidden");
                 pantallaRegistro.classList.add("block");
             }
@@ -279,27 +347,17 @@
 
             if (miFotoB64) {
                 txtAvatar.classList.add("hidden"); 
-                txtAvatar.classList.remove("flex", "block");
                 configTxt.classList.add("hidden"); 
-                configTxt.classList.remove("flex", "block");
-
                 imgAvatar.src = miFotoB64; 
                 imgAvatar.classList.remove("hidden");
-                imgAvatar.classList.add("block");
-
                 configImg.src = miFotoB64; 
                 configImg.classList.remove("hidden");
-                configImg.classList.add("block");
             } else {
                 imgAvatar.classList.add("hidden"); 
-                imgAvatar.classList.remove("block", "flex");
                 configImg.classList.add("hidden"); 
-                configImg.classList.remove("block", "flex");
-
                 txtAvatar.textContent = miNombre.charAt(0).toUpperCase(); 
                 txtAvatar.classList.remove("hidden");
                 txtAvatar.classList.add("flex");
-
                 configTxt.textContent = miNombre.charAt(0).toUpperCase(); 
                 configTxt.classList.remove("hidden");
                 configTxt.classList.add("flex");
@@ -324,9 +382,7 @@
             });
 
             const lector = new FileReader();
-            lector.onload = function(e) {
-                instanciaCroppie.bind({ url: e.target.result });
-            };
+            lector.onload = function(e) { instanciaCroppie.bind({ url: e.target.result }); };
             lector.readAsDataURL(archivo);
             document.getElementById("input-avatar-file").value = "";
         }
@@ -340,11 +396,7 @@
             if (!instanciaCroppie) return;
 
             instanciaCroppie.result({
-                type: 'canvas',
-                size: { width: 200, height: 200 },
-                format: 'jpeg',
-                quality: 0.85,
-                circle: false 
+                type: 'canvas', size: { width: 200, height: 200 }, format: 'jpeg', quality: 0.85
             }).then(function(base64Recortada) {
                 miFotoB64 = base64Recortada;
                 localStorage.setItem("wasapedro_my_avatar", miFotoB64);
@@ -355,7 +407,7 @@
             });
         }
 
-        // --- INICIO DE SESIÓN / REGISTRO CORREGIDO TOTALMENTE ---
+        // --- INICIO DE SESIÓN / REGISTRO ---
         document.getElementById("btn-guardar").addEventListener("click", () => {
             const nombreIngresado = document.getElementById("input-nombre").value.trim().toLowerCase();
             const emailRecuperar = document.getElementById("input-recuperar-email").value.trim().toLowerCase();
@@ -403,12 +455,12 @@
                         if (typeof clienteValidacion.removeListener === "function") {
                             clienteValidacion.removeListener('message', escucharBackup);
                         }
-                    } catch(err) { console.log("Limpieza bypass"); }
+                    } catch(err) {}
 
                     if (backupRecibido) {
                         miNombre = nombreIngresado;
                         localStorage.setItem("wasapedro_mqtt_name", miNombre);
-                        alert("¡Cuenta e historial restaurados desde la nube!");
+                        alert("¡Cuenta e historial restaurados!");
                         location.reload();
                     } else {
                         btn.textContent = "Verificando usuario...";
@@ -441,7 +493,7 @@
                     if (typeof clienteValidacion.removeListener === "function") {
                         clienteValidacion.removeListener('message', manejarVerificacion);
                     }
-                } catch(err) { console.log("Limpieza bypass verificación"); }
+                } catch(err) {}
 
                 if (nombreOcupado) {
                     btn.disabled = false; 
@@ -473,10 +525,8 @@
             
             if (clienteMqtt) clienteMqtt.subscribe(`wasapedro/v3/grupo/${idGrupo}`, { qos: 1 });
             
-            moverChatAlPrincipio(idGrupo);
-            cerrarModalGrupo();
-            abrirChat(idGrupo);
-            alert(`¡Grupo Creado! Comparte este ID exacto con tus amigos:\n\n${idGrupo}`);
+            moverChatAlPrincipio(idGrupo); cerrarModalGrupo(); abrirChat(idGrupo);
+            alert(`¡Grupo Creado! Comparte este ID:\n\n${idGrupo}`);
             document.getElementById("input-nombre-grupo").value = "";
         }
 
@@ -490,21 +540,14 @@
 
         // --- CONEXIÓN MQTT Y CHATS ---
         function conectarServidorCloud() {
-            const opcionesMqtt = { clientId: "wasapedro_client_v4_" + miNombre, clean: false };
+            const opcionesMqtt = { clientId: "wasapedro_client_v5_" + miNombre, clean: false };
             clienteMqtt = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', opcionesMqtt);
 
             clienteMqtt.on('connect', () => {
                 clienteMqtt.subscribe(`wasapedro/v3/chat/${miNombre}`, { qos: 1 });
-                
-                Object.keys(datosGrupos).forEach(idGrupo => {
-                    clienteMqtt.subscribe(`wasapedro/v3/grupo/${idGrupo}`, { qos: 1 });
-                });
-
-                if (gmailVinculado) {
-                    clienteMqtt.subscribe(`wasapedro/v3/backup/${btoa(gmailVinculado)}`);
-                }
-                actualizarListaAmigosUI();
-                actualizarBuzonNotificacionesUI();
+                Object.keys(datosGrupos).forEach(idGrupo => { clienteMqtt.subscribe(`wasapedro/v3/grupo/${idGrupo}`, { qos: 1 }); });
+                if (gmailVinculado) { clienteMqtt.subscribe(`wasapedro/v3/backup/${btoa(gmailVinculado)}`); }
+                actualizarListaAmigosUI(); actualizarBuzonNotificacionesUI();
             });
 
             clienteMqtt.on('message', (topico, mensaje) => {
@@ -517,6 +560,12 @@
 
                     const data = JSON.parse(mensaje.toString());
                     if (!data.emisor || data.emisor === miNombre) return;
+
+                    // --- INTERCEPTAR SEÑALIZACIÓN DE VIDEOLLAMADA ---
+                    if (data.esSignaling) {
+                        manejarSignaling(data);
+                        return;
+                    }
 
                     let deQuien = data.emisor; 
                     let esMensajeGrupo = topico.includes("/grupo/");
@@ -545,11 +594,7 @@
                     
                     if (!yaExiste) {
                         historialesDeChats[idContenedorHistorial].push({ 
-                            soyYo: false, 
-                            texto: data.texto, 
-                            archivo: data.archivo, 
-                            nombreArchivo: data.nombreArchivo, 
-                            idMsg: data.idMsg,
+                            soyYo: false, texto: data.texto, archivo: data.archivo, nombreArchivo: data.nombreArchivo, idMsg: data.idMsg,
                             tagGrupoEmisor: esMensajeGrupo ? data.emisor : null 
                         });
                         localStorage.setItem("wasapedro_historiales", JSON.stringify(historialesDeChats));
@@ -578,12 +623,7 @@
             
             let esGrupo = datosGrupos[chatActivo]?.esGrupo;
             const payload = { 
-                emisor: miNombre, 
-                texto: texto, 
-                archivo: archivoBase64, 
-                nombreArchivo: nombreArch, 
-                idMsg: idMensajeUnico,
-                fotoEmisor: miFotoB64 
+                emisor: miNombre, texto: texto, archivo: archivoBase64, nombreArchivo: nombreArch, idMsg: idMensajeUnico, fotoEmisor: miFotoB64 
             };
 
             if(esGrupo) {
@@ -609,9 +649,7 @@
             const colorTexto = soyYo && (temaActual === '#00a884') ? 'text-black font-medium' : 'text-white';
 
             let contenidoHtml = "";
-            if (tagGrupoEmisor) {
-                contenidoHtml += `<div class="text-[10px] text-[#00a884] font-bold block mb-1">@${tagGrupoEmisor}</div>`;
-            }
+            if (tagGrupoEmisor) { contenidoHtml += `<div class="text-[10px] text-[#00a884] font-bold block mb-1">@${tagGrupoEmisor}</div>`; }
 
             if (archivoBase64) {
                 if (archivoBase64.startsWith("data:image/")) {
@@ -619,8 +657,7 @@
                 } else {
                     contenidoHtml += `
                         <div class="flex items-center gap-2 p-1 bg-black/20 rounded-md mb-1">
-                            <i class="ph ph-file-text text-xl"></i>
-                            <span class="text-xs truncate max-w-[130px] inline-block">${nombreArch}</span>
+                            <i class="ph ph-file-text text-xl"></i><span class="text-xs truncate max-w-[130px] inline-block">${nombreArch}</span>
                         </div>
                         <a href="${archivoBase64}" download="${nombreArch}" class="text-[10px] underline block text-right font-bold opacity-80 hover:opacity-100">Descargar</a>
                     `;
@@ -752,30 +789,29 @@
             const chatVacia = document.getElementById("pantalla-chat-vacia");
             const chatActiva = document.getElementById("pantalla-chat-activa");
             
-            chatVacia.classList.add("hidden"); chatVacia.classList.remove("flex");
-            chatActiva.classList.remove("hidden"); chatActiva.classList.add("flex");
+            chatVacia.classList.add("hidden"); chatActiva.classList.remove("hidden"); chatActiva.classList.add("flex");
             
             let esGrupo = datosGrupos[id]?.esGrupo;
             document.getElementById("nombre-chat-amigo").textContent = esGrupo ? datosGrupos[id].nombre : (apodosContactos[id] || id);
             
+            // Mostrar/Ocultar botón de videollamada según si es un grupo o un chat individual
+            const btnCall = document.getElementById("btn-videollamada");
+            if (esGrupo) { btnCall.classList.add("hidden"); } else { btnCall.classList.remove("hidden"); }
+
             const subInfo = document.getElementById("sub-chat-info");
-            if (esGrupo) { subInfo.textContent = "ID de Grupo: " + id; subInfo.classList.remove("hidden");
-            } else { subInfo.classList.add("hidden"); }
+            if (esGrupo) { subInfo.textContent = "ID de Grupo: " + id; subInfo.classList.remove("hidden"); } else { subInfo.classList.add("hidden"); }
 
             const txtChatAvatar = document.getElementById("avatar-chat-txt");
             const imgChatAvatar = document.getElementById("avatar-chat-img");
             let fotoAmigo = fotosAmigos[id] || "";
 
             if (esGrupo) {
-                imgChatAvatar.classList.add("hidden"); imgChatAvatar.classList.remove("block");
-                txtChatAvatar.classList.remove("hidden"); txtChatAvatar.classList.add("flex");
+                imgChatAvatar.classList.add("hidden"); txtChatAvatar.classList.remove("hidden"); txtChatAvatar.classList.add("flex");
                 txtChatAvatar.innerHTML = `<i class="ph ph-users-three"></i>`; txtChatAvatar.style.backgroundColor = temaActual;
             } else if (fotoAmigo) {
-                txtChatAvatar.classList.add("hidden"); txtChatAvatar.classList.remove("flex", "block");
-                imgChatAvatar.src = fotoAmigo; imgChatAvatar.classList.remove("hidden"); imgChatAvatar.classList.add("block");
+                txtChatAvatar.classList.add("hidden"); imgChatAvatar.src = fotoAmigo; imgChatAvatar.classList.remove("hidden");
             } else {
-                imgChatAvatar.classList.add("hidden"); imgChatAvatar.classList.remove("block");
-                txtChatAvatar.classList.remove("hidden"); txtChatAvatar.classList.add("flex");
+                imgChatAvatar.classList.add("hidden"); txtChatAvatar.classList.remove("hidden"); txtChatAvatar.classList.add("flex");
                 txtChatAvatar.textContent = id.charAt(0).toUpperCase(); txtChatAvatar.style.backgroundColor = temaActual;
             }
 
@@ -880,6 +916,155 @@
         function procesarArchivoAdjunto(archivo) {
             if (!archivo) return; if (archivo.size > 1500000) return alert("El archivo supera los 1.5 MB.");
             const lector = new FileReader(); lector.onload = function(evento) { enviarMensajeServidor("", evento.target.result, archivo.name); }; lector.readAsDataURL(archivo);
+        }
+
+        // --- LÓGICA DE VIDEOLLAMADAS (WEBRTC + MQTT SIGNALING) ---
+        function enviarSignaling(destino, tipo, payload) {
+            if (!clienteMqtt) return;
+            const msg = { emisor: miNombre, esSignaling: true, tipoSignaling: tipo, dataSignaling: payload };
+            clienteMqtt.publish(`wasapedro/v3/chat/${destino}`, JSON.stringify(msg), { qos: 1 });
+        }
+
+        function iniciarVideollamada() {
+            if (!chatActivo || enLlamada) return;
+            usuarioLlamadaActual = chatActivo;
+            enLlamada = true;
+            
+            document.getElementById("modal-video").classList.remove("hidden");
+            document.getElementById("estado-llamada").textContent = "Llamando a @" + usuarioLlamadaActual + "...";
+            
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(stream => {
+                localStream = stream;
+                document.getElementById("video-local").srcObject = stream;
+                
+                peerConnection = new RTCPeerConnection(configWebRTC);
+                stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+                
+                peerConnection.onicecandidate = e => {
+                    if (e.candidate) enviarSignaling(usuarioLlamadaActual, "ice_candidate", e.candidate);
+                };
+                
+                peerConnection.ontrack = e => {
+                    document.getElementById("video-remoto").srcObject = e.streams[0];
+                    document.getElementById("estado-llamada").textContent = "En llamada";
+                };
+                
+                return peerConnection.createOffer();
+            })
+            .then(offer => peerConnection.setLocalDescription(offer))
+            .then(() => enviarSignaling(usuarioLlamadaActual, "call_offer", peerConnection.localDescription))
+            .catch(err => {
+                alert("Permisos de cámara o micrófono denegados.");
+                terminarLlamadaLocal(true);
+            });
+        }
+
+        function manejarSignaling(data) {
+            if (data.tipoSignaling === "call_offer") {
+                if (enLlamada) {
+                    enviarSignaling(data.emisor, "call_hangup", null);
+                    return;
+                }
+                usuarioLlamadaActual = data.emisor;
+                ofertaRecibidaTemporal = data.dataSignaling;
+                document.getElementById("txt-usuario-llamando").textContent = "@" + data.emisor;
+                document.getElementById("modal-llamada-entrante").classList.remove("hidden");
+            } 
+            else if (data.tipoSignaling === "call_answer") {
+                if (peerConnection && enLlamada) {
+                    peerConnection.setRemoteDescription(new RTCSessionDescription(data.dataSignaling)).catch(e => console.log(e));
+                }
+            } 
+            else if (data.tipoSignaling === "ice_candidate") {
+                if (peerConnection) {
+                    peerConnection.addIceCandidate(new RTCIceCandidate(data.dataSignaling)).catch(e => console.log(e));
+                }
+            } 
+            else if (data.tipoSignaling === "call_hangup") {
+                terminarLlamadaLocal(false);
+            }
+        }
+
+        function rechazarLlamadaEntrante() {
+            document.getElementById("modal-llamada-entrante").classList.add("hidden");
+            enviarSignaling(usuarioLlamadaActual, "call_hangup", null);
+            usuarioLlamadaActual = null;
+            ofertaRecibidaTemporal = null;
+        }
+
+        function aceptarLlamadaEntrante() {
+            document.getElementById("modal-llamada-entrante").classList.add("hidden");
+            if (!usuarioLlamadaActual || !ofertaRecibidaTemporal) return;
+            
+            enLlamada = true;
+            document.getElementById("modal-video").classList.remove("hidden");
+            document.getElementById("estado-llamada").textContent = "Conectando audio y video...";
+            
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(stream => {
+                localStream = stream;
+                document.getElementById("video-local").srcObject = stream;
+                
+                peerConnection = new RTCPeerConnection(configWebRTC);
+                stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+                
+                peerConnection.onicecandidate = e => {
+                    if (e.candidate) enviarSignaling(usuarioLlamadaActual, "ice_candidate", e.candidate);
+                };
+                
+                peerConnection.ontrack = e => {
+                    document.getElementById("video-remoto").srcObject = e.streams[0];
+                    document.getElementById("estado-llamada").textContent = "En llamada";
+                };
+                
+                return peerConnection.setRemoteDescription(new RTCSessionDescription(ofertaRecibidaTemporal));
+            })
+            .then(() => peerConnection.createAnswer())
+            .then(answer => peerConnection.setLocalDescription(answer))
+            .then(() => {
+                enviarSignaling(usuarioLlamadaActual, "call_answer", peerConnection.localDescription);
+                ofertaRecibidaTemporal = null;
+            })
+            .catch(err => {
+                alert("Error al conectar llamada.");
+                terminarLlamadaLocal(true);
+            });
+        }
+
+        function terminarLlamadaLocal(avisarAlOtro) {
+            if (avisarAlOtro && usuarioLlamadaActual) enviarSignaling(usuarioLlamadaActual, "call_hangup", null);
+            
+            if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
+            if (peerConnection) { peerConnection.close(); peerConnection = null; }
+            
+            enLlamada = false;
+            usuarioLlamadaActual = null;
+            ofertaRecibidaTemporal = null;
+            
+            document.getElementById("modal-video").classList.add("hidden");
+            document.getElementById("video-local").srcObject = null;
+            document.getElementById("video-remoto").srcObject = null;
+            
+            audioActivo = true; videoActivo = true;
+            document.getElementById("btn-mutear-audio").innerHTML = '<i class="ph ph-microphone"></i>';
+            document.getElementById("btn-mutear-video").innerHTML = '<i class="ph ph-video-camera"></i>';
+        }
+
+        function alternarAudio() {
+            if(localStream) {
+                audioActivo = !audioActivo;
+                localStream.getAudioTracks().forEach(track => track.enabled = audioActivo);
+                document.getElementById("btn-mutear-audio").innerHTML = audioActivo ? '<i class="ph ph-microphone"></i>' : '<i class="ph ph-microphone-slash text-red-400"></i>';
+            }
+        }
+
+        function alternarVideo() {
+            if(localStream) {
+                videoActivo = !videoActivo;
+                localStream.getVideoTracks().forEach(track => track.enabled = videoActivo);
+                document.getElementById("btn-mutear-video").innerHTML = videoActivo ? '<i class="ph ph-video-camera"></i>' : '<i class="ph ph-video-camera-slash text-red-400"></i>';
+            }
         }
 
         document.getElementById("btn-enviar").addEventListener("click", enviarMensaje);
