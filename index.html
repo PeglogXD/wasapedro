@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WasaPedro</title>
+    <title>WasaPedro Premium v4 Fixed</title>
     <link rel="manifest" href="manifest.json"> 
     <meta name="theme-color" id="meta-theme" content="#00a884">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- LIBRERÍA DE RECORTE (CROPPIE) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
     
@@ -23,7 +22,6 @@
 </head>
 <body class="h-screen w-screen flex flex-col items-center justify-center p-4 bg-[#0b141a] text-[#e9edef] font-sans overflow-hidden select-none">
 
-    <!-- 1. PANTALLA DE BIENVENIDA / RECUPERACIÓN -->
     <div id="pantalla-registro" class="bg-[#111b21] p-8 rounded-2xl shadow-2xl border border-[#222e35] max-w-sm w-full text-center hidden">
         <h1 class="text-3xl font-extrabold text-[#00a884] mb-2 theme-text">WasaPedro</h1>
         <p class="text-gray-400 text-sm mb-6">Ingresa tu usuario para iniciar sesión.</p>
@@ -39,10 +37,8 @@
         <button id="btn-guardar" class="w-full bg-[#00a884] theme-bg hover:opacity-90 text-[#111b21] font-bold p-3 rounded-lg transition disabled:opacity-50">Ingresar / Restaurar</button>
     </div>
 
-    <!-- 2. INTERFAZ PRINCIPAL -->
     <div id="interfaz-principal" class="w-full max-w-4xl h-[85vh] bg-[#111b21] rounded-2xl shadow-2xl border border-[#222e35] overflow-hidden hidden">
         
-        <!-- BARRA LATERAL -->
         <div class="w-1/3 border-r border-[#222e35] flex flex-col bg-[#111b21]">
             <div class="p-4 bg-[#202d33] flex justify-between items-center">
                 <div class="flex items-center gap-3 min-w-0">
@@ -60,7 +56,6 @@
                 </div>
             </div>
 
-            <!-- Buscador Permanente -->
             <div class="p-3 bg-[#111b21] border-b border-[#222e35]">
                 <div class="flex flex-col gap-2 bg-[#202d33] rounded-lg p-2">
                     <input type="text" id="input-buscar" placeholder="Nombre de amigo o ID de grupo..." class="bg-transparent text-xs w-full focus:outline-none text-white placeholder-gray-400">
@@ -68,7 +63,6 @@
                 </div>
             </div>
 
-            <!-- Buzón de Alertas Recientes -->
             <div class="p-4 border-b border-[#222e35] bg-[#182229]">
                 <h2 class="text-xs font-bold tracking-wider text-gray-400 uppercase mb-2">Mensajes sin leer</h2>
                 <div id="lista-notificaciones" class="space-y-1 text-xs max-h-20 overflow-y-auto">
@@ -76,22 +70,19 @@
                 </div>
             </div>
 
-            <!-- Lista de Chats Guardados Ordenados Dinámicamente -->
             <div class="flex-1 overflow-y-auto p-2 space-y-1" id="lista-amigos">
                 <h2 class="text-xs font-bold tracking-wider text-gray-400 uppercase p-2">Chats Recientes</h2>
                 <div id="contenedor-lista-dinamica" class="space-y-1"></div>
             </div>
         </div>
 
-        <!-- VENTANA DE CHAT VACÍA -->
         <div class="flex-1 flex flex-col bg-[#222e35] bg-opacity-20" id="pantalla-chat-vacia">
             <div class="m-auto text-center max-w-sm">
-                <h3 class="text-xl font-semibold text-gray-300">WasaPedro</h3>
-                <p class="text-sm text-gray-500 mt-2">Whatsapp pero para estudiantes en una chormebook</p>
+                <h3 class="text-xl font-semibold text-gray-300">WasaPedro Pro Plus</h3>
+                <p class="text-sm text-gray-500 mt-2">Ahora con soporte de Grupos, Orden Dinámico por Mensaje y Foto de Perfil Cloud.</p>
             </div>
         </div>
 
-        <!-- VENTANA DE CHAT ACTIVA -->
         <div class="flex-1 flex flex-col bg-[#0b141a] relative hidden" id="pantalla-chat-activa">
             <div id="zona-drop-visual" class="absolute inset-0 bg-[#00a884]/20 border-4 border-dashed border-[#00a884] z-50 flex flex-col items-center justify-center backdrop-blur-sm pointer-events-none transition-all duration-200 opacity-0">
                 <i class="ph ph-cloud-arrow-up text-6xl text-white mb-2 animate-bounce"></i>
@@ -123,7 +114,6 @@
 
     </div>
 
-    <!-- MODAL DE CREACIÓN DE GRUPOS -->
     <div id="modal-grupo" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-sm rounded-2xl p-6 shadow-2xl">
             <h2 class="text-lg font-bold text-white mb-3 flex items-center gap-2"><i class="ph ph-users-three text-[#00a884] theme-text"></i> Crear Nuevo Grupo</h2>
@@ -136,7 +126,6 @@
         </div>
     </div>
 
-    <!-- MODAL DE RECORTE DE FOTO (CROPPIE) -->
     <div id="modal-crop" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-[60]">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-sm rounded-2xl p-5 shadow-2xl flex flex-col">
             <h2 class="text-sm font-bold text-white mb-4 text-center">Ajusta tu foto de perfil</h2>
@@ -150,7 +139,6 @@
         </div>
     </div>
 
-    <!-- MODAL DE CONFIGURACIÓN -->
     <div id="modal-config" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-md rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
@@ -158,7 +146,6 @@
                 <button id="btn-cerrar-config" class="text-gray-400 hover:text-white text-lg"><i class="ph ph-x"></i></button>
             </div>
 
-            <!-- SECCIÓN: CUENTA Y FOTO DE PERFIL CON CROP -->
             <div class="mb-6 p-4 bg-[#182229] border border-[#222e35] rounded-xl">
                 <label class="text-xs font-bold uppercase tracking-wider text-[#00a884] theme-text block mb-3 flex items-center gap-1">
                     <i class="ph ph-user-circle-gear text-base"></i> Cuenta y Foto de Perfil
@@ -368,7 +355,7 @@
             });
         }
 
-        // --- INICIO DE SESIÓN / REGISTRO CORREGIDO ---
+        // --- INICIO DE SESIÓN / REGISTRO CORREGIDO TOTALMENTE ---
         document.getElementById("btn-guardar").addEventListener("click", () => {
             const nombreIngresado = document.getElementById("input-nombre").value.trim().toLowerCase();
             const emailRecuperar = document.getElementById("input-recuperar-email").value.trim().toLowerCase();
@@ -410,10 +397,13 @@
                 clienteValidacion.on('message', escucharBackup);
                 clienteValidacion.publish(canalBackup, JSON.stringify({ accion: "solicitar_backup", usuario: nombreIngresado }));
 
-                // Si en 1.5 segundos no responde la nube, se procesa como cuenta nueva automáticamente
                 setTimeout(() => {
-                    clienteValidacion.unsubscribe(canalBackup);
-                    clienteValidacion.off('message', escucharBackup);
+                    try {
+                        clienteValidacion.unsubscribe(canalBackup);
+                        if (typeof clienteValidacion.removeListener === "function") {
+                            clienteValidacion.removeListener('message', escucharBackup);
+                        }
+                    } catch(err) { console.log("Limpieza bypass"); }
 
                     if (backupRecibido) {
                         miNombre = nombreIngresado;
@@ -421,8 +411,7 @@
                         alert("¡Cuenta e historial restaurados desde la nube!");
                         location.reload();
                     } else {
-                        // Cambio visual clave para evitar la sensación de pausa o congelamiento
-                        btn.textContent = "Creando cuenta nueva...";
+                        btn.textContent = "Verificando usuario...";
                         verificarNombreLibreYRegistrar(nombreIngresado, emailRecuperar, btn, txtError);
                     }
                 }, 1500);
@@ -447,8 +436,12 @@
             clienteValidacion.publish(subCanal, JSON.stringify({ accion: "pregunta" }));
 
             setTimeout(() => {
-                clienteValidacion.unsubscribe(subCanal);
-                clienteValidacion.off('message', manejarVerificacion);
+                try {
+                    clienteValidacion.unsubscribe(subCanal);
+                    if (typeof clienteValidacion.removeListener === "function") {
+                        clienteValidacion.removeListener('message', manejarVerificacion);
+                    }
+                } catch(err) { console.log("Limpieza bypass verificación"); }
 
                 if (nombreOcupado) {
                     btn.disabled = false; 
@@ -609,8 +602,8 @@
         }
 
         function dibujarBurbuja(texto, soyYo, archivoBase64, nombreArch, tagGrupoEmisor) {
-            const contenedor = document.getElementById("contenedor-messages");
             const contenedorActual = document.getElementById("contenedor-mensajes");
+            if (!contenedorActual) return;
             const div = document.createElement("div"); div.className = `flex ${soyYo ? 'justify-end' : 'justify-start'}`;
             const backgroundBurbuja = soyYo ? temaActual : '#202d33';
             const colorTexto = soyYo && (temaActual === '#00a884') ? 'text-black font-medium' : 'text-white';
