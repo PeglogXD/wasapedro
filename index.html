@@ -22,7 +22,7 @@
 </head>
 <body class="h-screen w-screen flex flex-col items-center justify-center p-4 bg-[#0b141a] text-[#e9edef] font-sans overflow-hidden select-none">
 
-    <div id="pantalla-registro" class="bg-[#111b21] p-8 rounded-2xl shadow-2xl border border-[#222e35] max-w-sm w-full text-center block">
+    <div id="pantalla-registro" class="bg-[#111b21] p-8 rounded-2xl shadow-2xl border border-[#222e35] max-w-sm w-full text-center hidden">
         <h1 class="text-3xl font-extrabold text-[#00a884] mb-2 theme-text">WasaPedro</h1>
         <p class="text-gray-400 text-sm mb-6">Ingresa tu usuario para iniciar sesión.</p>
         
@@ -37,13 +37,13 @@
         <button id="btn-guardar" class="w-full bg-[#00a884] theme-bg hover:opacity-90 text-[#111b21] font-bold p-3 rounded-lg transition disabled:opacity-50">Ingresar / Restaurar</button>
     </div>
 
-    <div id="interfaz-principal" class="w-full max-w-4xl h-[85vh] bg-[#111b21] rounded-2xl shadow-2xl border border-[#222e35] flex overflow-hidden hidden">
+    <div id="interfaz-principal" class="w-full max-w-4xl h-[85vh] bg-[#111b21] rounded-2xl shadow-2xl border border-[#222e35] overflow-hidden hidden">
         
         <div class="w-1/3 border-r border-[#222e35] flex flex-col bg-[#111b21]">
             <div class="p-4 bg-[#202d33] flex justify-between items-center">
                 <div class="flex items-center gap-3 min-w-0">
                     <img id="avatar-usuario-img" src="" class="w-10 h-10 rounded-full object-cover hidden flex-shrink-0">
-                    <div id="avatar-usuario-txt" class="w-10 h-10 bg-[#00a884] theme-bg text-[#111b21] font-bold rounded-full flex items-center justify-center text-lg flex-shrink-0">?</div>
+                    <div id="avatar-usuario-txt" class="w-10 h-10 bg-[#00a884] theme-bg text-[#111b21] font-bold rounded-full flex items-center justify-center text-lg flex-shrink-0 hidden">?</div>
                     <span id="nombre-usuario-pantalla" class="font-medium text-sm truncate">...</span>
                 </div>
                 <div class="flex gap-1">
@@ -83,7 +83,7 @@
             </div>
         </div>
 
-        <div class="flex-1 flex flex-col bg-[#0b141a] hidden relative" id="pantalla-chat-activa">
+        <div class="flex-1 flex flex-col bg-[#0b141a] relative hidden" id="pantalla-chat-activa">
             <div id="zona-drop-visual" class="absolute inset-0 bg-[#00a884]/20 border-4 border-dashed border-[#00a884] z-50 flex flex-col items-center justify-center backdrop-blur-sm pointer-events-none transition-all duration-200 opacity-0">
                 <i class="ph ph-cloud-arrow-up text-6xl text-white mb-2 animate-bounce"></i>
                 <p class="text-lg font-bold text-white">¡Suelta el archivo para cargarlo!</p>
@@ -92,7 +92,7 @@
             <div class="p-4 bg-[#202d33] flex items-center justify-between border-b border-[#222e35]">
                 <div class="flex items-center gap-3">
                     <img id="avatar-chat-img" src="" class="w-9 h-9 rounded-full object-cover hidden">
-                    <div class="w-9 h-9 bg-[#00a884] theme-bg text-black font-bold rounded-full flex items-center justify-center text-sm" id="avatar-chat-txt">?</div>
+                    <div class="w-9 h-9 bg-[#00a884] theme-bg text-black font-bold rounded-full flex items-center justify-center text-sm hidden" id="avatar-chat-txt">?</div>
                     <div>
                         <span id="nombre-chat-amigo" class="font-medium text-sm block">...</span>
                         <span id="sub-chat-info" class="text-[10px] text-gray-400 block hidden"></span>
@@ -156,7 +156,7 @@
                 <div class="flex items-center gap-4 mb-4 bg-[#111b21] p-3 rounded-lg border border-[#222e35]">
                     <div class="relative group flex-shrink-0">
                         <img id="preview-config-avatar" src="" class="w-16 h-16 rounded-full object-cover bg-gray-700 hidden">
-                        <div id="preview-config-txt" class="w-16 h-16 bg-[#00a884] theme-bg text-black font-bold text-2xl rounded-full flex items-center justify-center">?</div>
+                        <div id="preview-config-txt" class="w-16 h-16 bg-[#00a884] theme-bg text-black font-bold text-2xl rounded-full flex items-center justify-center hidden">?</div>
                         
                         <label for="input-avatar-file" class="absolute inset-0 bg-black/60 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition text-[9px] text-white text-center font-bold p-1">
                             <i class="ph ph-camera text-base mb-1"></i>
@@ -243,20 +243,18 @@
             } catch(e) {}
         });
 
-        // --- MANEJO DE ESTADO INICIAL (ARREGLO DEL BUG) ---
+        // --- MANEJO DE ESTADO INICIAL (SOLUCIÓN DEFINITIVA DEL BUG DE CLASES) ---
         function inicializarUI() {
             const pantallaRegistro = document.getElementById("pantalla-registro");
             const interfazPrincipal = document.getElementById("interfaz-principal");
 
-            // Asegurar que ambas estén ocultas primero
-            pantallaRegistro.classList.add("hidden");
-            pantallaRegistro.classList.remove("block");
-            interfazPrincipal.classList.add("hidden");
-
             if (miNombre) {
-                // Si ya inició sesión, ocultar registro y mostrar interfaz principal
+                // Si el usuario ya está logueado: Ocultar de verdad el registro y activar la interfaz principal
                 pantallaRegistro.classList.add("hidden");
+                pantallaRegistro.classList.remove("block", "flex");
+
                 interfazPrincipal.classList.remove("hidden");
+                interfazPrincipal.classList.add("flex");
                 
                 document.getElementById("nombre-usuario-pantalla").textContent = miNombre;
                 document.getElementById("config-nombre-usuario").textContent = miNombre;
@@ -267,8 +265,10 @@
                 conectarServidorCloud();
                 inicializarEventosArrastrarArchivos();
             } else {
-                // Si no hay sesión, ocultar interfaz principal y mostrar registro
+                // Si no hay sesión: Ocultar de verdad la interfaz principal y activar el registro
                 interfazPrincipal.classList.add("hidden");
+                interfazPrincipal.classList.remove("flex", "block");
+
                 pantallaRegistro.classList.remove("hidden");
                 pantallaRegistro.classList.add("block");
             }
@@ -283,17 +283,35 @@
             const configImg = document.getElementById("preview-config-avatar");
 
             if (miFotoB64) {
-                txtAvatar.classList.add("hidden"); configTxt.classList.add("hidden");
-                imgAvatar.src = miFotoB64; imgAvatar.classList.remove("hidden");
-                configImg.src = miFotoB64; configImg.classList.remove("hidden");
+                txtAvatar.classList.add("hidden"); 
+                txtAvatar.classList.remove("flex", "block");
+                configTxt.classList.add("hidden"); 
+                configTxt.classList.remove("flex", "block");
+
+                imgAvatar.src = miFotoB64; 
+                imgAvatar.classList.remove("hidden");
+                imgAvatar.classList.add("block");
+
+                configImg.src = miFotoB64; 
+                configImg.classList.remove("hidden");
+                configImg.classList.add("block");
             } else {
-                imgAvatar.classList.add("hidden"); configImg.classList.add("hidden");
-                txtAvatar.textContent = miNombre.charAt(0).toUpperCase(); txtAvatar.classList.remove("hidden");
-                configTxt.textContent = miNombre.charAt(0).toUpperCase(); configTxt.classList.remove("hidden");
+                imgAvatar.classList.add("hidden"); 
+                imgAvatar.classList.remove("block", "flex");
+                configImg.classList.add("hidden"); 
+                configImg.classList.remove("block", "flex");
+
+                txtAvatar.textContent = miNombre.charAt(0).toUpperCase(); 
+                txtAvatar.classList.remove("hidden");
+                txtAvatar.classList.add("flex");
+
+                configTxt.textContent = miNombre.charAt(0).toUpperCase(); 
+                configTxt.classList.remove("hidden");
+                configTxt.classList.add("flex");
             }
         }
 
-        // --- ☁️ NUEVA LÓGICA DE RECORTE (CROPPIE) ---
+        // --- LÓGICA DE RECORTE (CROPPIE) ---
         function iniciarProcesoRecorte(archivo) {
             if (!archivo) return;
             if (!archivo.type.match('image.*')) return alert("El archivo seleccionado no es una imagen válida.");
@@ -332,9 +350,9 @@
 
             instanciaCroppie.result({
                 type: 'canvas',
-                size: { width: 200, height: 200 }, // Tamaño final optimizado
-                format: 'jpeg', // JPEG para que pese menos en la nube
-                quality: 0.85, // Buena calidad, bajo peso
+                size: { width: 200, height: 200 },
+                format: 'jpeg',
+                quality: 0.85,
                 circle: false 
             }).then(function(base64Recortada) {
                 miFotoB64 = base64Recortada;
@@ -571,7 +589,7 @@
             }
 
             if (!historialesDeChats[chatActivo]) historialesDeChats[chatActivo] = [];
-            historialesDeChats[chatActivo].push({ soyYo: true, texto: texto, archivo: archivoBase64, nombreArchivo: nombreArch, idMsg: idMensajeUnico });
+            historialesDeChats[chatActivo].push({ soyYo: true, texto: texto, archivo: archivoBase64, textNombre: nombreArch, idMsg: idMensajeUnico });
             localStorage.setItem("wasapedro_historiales", JSON.stringify(historialesDeChats));
             
             dibujarBurbuja(texto, true, archivoBase64, nombreArch, null);
@@ -702,7 +720,17 @@
                 localStorage.setItem("wasapedro_amigos_list", JSON.stringify(listaAmigosActivos));
                 localStorage.setItem("wasapedro_orden_chats", JSON.stringify(ordenChats));
                 localStorage.setItem("wasapedro_historiales", JSON.stringify(historialesDeChats));
-                if (chatActivo === id) { chatActivo = null; document.getElementById("pantalla-chat-activa").classList.add("hidden"); document.getElementById("pantalla-chat-vacia").classList.remove("hidden"); }
+                if (chatActivo === id) { 
+                    chatActivo = null; 
+                    const chatActivaEl = document.getElementById("pantalla-chat-activa");
+                    const chatVaciaEl = document.getElementById("pantalla-chat-vacia");
+                    
+                    chatActivaEl.classList.add("hidden"); 
+                    chatActivaEl.classList.remove("flex");
+                    
+                    chatVaciaEl.classList.remove("hidden");
+                    chatVaciaEl.classList.add("flex");
+                }
                 actualizarListaAmigosUI();
             }
         }
@@ -710,14 +738,32 @@
         function menuBloquear(id) {
             if (confirm("¿Bloquear contacto?")) {
                 listaBloqueados.push(id); localStorage.setItem("wasapedro_bloqueados", JSON.stringify(listaBloqueados));
-                if (chatActivo === id) { chatActivo = null; document.getElementById("pantalla-chat-activa").classList.add("hidden"); document.getElementById("pantalla-chat-vacia").classList.remove("hidden"); }
+                if (chatActivo === id) { 
+                    chatActivo = null; 
+                    const chatActivaEl = document.getElementById("pantalla-chat-activa");
+                    const chatVaciaEl = document.getElementById("pantalla-chat-vacia");
+                    
+                    chatActivaEl.classList.add("hidden"); 
+                    chatActivaEl.classList.remove("flex");
+                    
+                    chatVaciaEl.classList.remove("hidden");
+                    chatVaciaEl.classList.add("flex");
+                }
                 actualizarListaAmigosUI(); actualizarBuzonNotificacionesUI();
             }
         }
 
         function abrirChat(id) {
             chatActivo = id; delete notificacionesPendientes[id]; actualizarBuzonNotificacionesUI();
-            document.getElementById("pantalla-chat-vacia").classList.add("hidden"); document.getElementById("pantalla-chat-activa").classList.remove("hidden");
+            
+            const chatVacia = document.getElementById("pantalla-chat-vacia");
+            const chatActiva = document.getElementById("pantalla-chat-activa");
+            
+            chatVacia.classList.add("hidden"); 
+            chatVacia.classList.remove("flex");
+            
+            chatActiva.classList.remove("hidden"); 
+            chatActiva.classList.add("flex");
             
             let esGrupo = datosGrupos[id]?.esGrupo;
             document.getElementById("nombre-chat-amigo").textContent = esGrupo ? datosGrupos[id].nombre : (apodosContactos[id] || id);
@@ -731,13 +777,28 @@
             let fotoAmigo = fotosAmigos[id] || "";
 
             if (esGrupo) {
-                imgChatAvatar.classList.add("hidden"); txtChatAvatar.classList.remove("hidden");
-                txtChatAvatar.innerHTML = `<i class="ph ph-users-three"></i>`; txtChatAvatar.style.backgroundColor = temaActual;
+                imgChatAvatar.classList.add("hidden"); 
+                imgChatAvatar.classList.remove("block");
+                
+                txtChatAvatar.classList.remove("hidden"); 
+                txtChatAvatar.classList.add("flex");
+                txtChatAvatar.innerHTML = `<i class="ph ph-users-three"></i>`; 
+                txtChatAvatar.style.backgroundColor = temaActual;
             } else if (fotoAmigo) {
-                txtChatAvatar.classList.add("hidden"); imgChatAvatar.src = fotoAmigo; imgChatAvatar.classList.remove("hidden");
+                txtChatAvatar.classList.add("hidden"); 
+                txtChatAvatar.classList.remove("flex", "block");
+                
+                imgChatAvatar.src = fotoAmigo; 
+                imgChatAvatar.classList.remove("hidden");
+                imgChatAvatar.classList.add("block");
             } else {
-                imgChatAvatar.classList.add("hidden"); txtChatAvatar.classList.remove("hidden");
-                txtChatAvatar.textContent = id.charAt(0).toUpperCase(); txtChatAvatar.style.backgroundColor = temaActual;
+                imgChatAvatar.classList.add("hidden"); 
+                imgChatAvatar.classList.remove("block");
+                
+                txtChatAvatar.classList.remove("hidden"); 
+                txtChatAvatar.classList.add("flex");
+                txtChatAvatar.textContent = id.charAt(0).toUpperCase(); 
+                txtChatAvatar.style.backgroundColor = temaActual;
             }
 
             const cM = document.getElementById("contenedor-mensajes"); cM.innerHTML = "";
@@ -790,7 +851,10 @@
             document.querySelectorAll(".theme-text").forEach(el => el.style.color = hex);
             document.getElementById("btn-enviar").style.backgroundColor = hex;
             document.getElementById("btn-guardar").style.backgroundColor = hex;
-            if(!miFotoB64) { document.getElementById("avatar-usuario-txt").style.backgroundColor = hex; document.getElementById("preview-config-txt").style.backgroundColor = hex; }
+            if(!miFotoB64) { 
+                document.getElementById("avatar-usuario-txt").style.backgroundColor = hex; 
+                document.getElementById("preview-config-txt").style.backgroundColor = hex; 
+            }
         }
 
         function dibujarListaBloqueadosUI() {
