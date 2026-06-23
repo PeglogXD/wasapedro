@@ -132,7 +132,9 @@
                     <div class="relative group">
                         <img id="preview-config-avatar" src="" class="w-14 h-14 rounded-full object-cover bg-gray-700 hidden">
                         <div id="preview-config-txt" class="w-14 h-14 bg-[#00a884] theme-bg text-black font-bold text-xl rounded-full flex items-center justify-center">?</div>
-                        <label class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition text-[10px] text-white text-center font-bold">Cambiar</label>
+                        
+                        <label for="input-avatar-file" class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition text-[10px] text-white text-center font-bold">Cambiar</label>
+                        
                         <input type="file" id="input-avatar-file" class="hidden" accept="image/*" onchange="actualizarFotoPerfil(this.files[0])">
                     </div>
                     <div class="flex-1">
@@ -188,9 +190,9 @@
         let historialesDeChats = JSON.parse(localStorage.getItem("wasapedro_historiales")) || {};
         let apodosContactos = JSON.parse(localStorage.getItem("wasapedro_apodos")) || {};
         let listaBloqueados = JSON.parse(localStorage.getItem("wasapedro_bloqueados")) || [];
-        let datosGrupos = JSON.parse(localStorage.getItem("wasapedro_datos_grupos")) || {}; // { id_grupo: { nombre: "X", creador: "Y" } }
-        let fotosAmigos = JSON.parse(localStorage.getItem("wasapedro_fotos_amigos")) || {}; // { usuario: base64 }
-        let ordenChats = JSON.parse(localStorage.getItem("wasapedro_orden_chats")) || []; // Arreglo de IDs ordenados por el más reciente
+        let datosGrupos = JSON.parse(localStorage.getItem("wasapedro_datos_grupos")) || {}; 
+        let fotosAmigos = JSON.parse(localStorage.getItem("wasapedro_fotos_amigos")) || {}; 
+        let ordenChats = JSON.parse(localStorage.getItem("wasapedro_orden_chats")) || []; 
         let gmailVinculado = localStorage.getItem("wasapedro_gmail_link") || "";
         
         let notificacionesPendientes = {};
@@ -354,7 +356,6 @@
             if(!listaAmigosActivos.includes(idGrupo)) listaAmigosActivos.push(idGrupo);
             localStorage.setItem("wasapedro_amigos_list", JSON.stringify(listaAmigosActivos));
             
-            // Suscribirse de inmediato al nuevo canal de MQTT del grupo
             if (clienteMqtt) clienteMqtt.subscribe(`wasapedro/v3/grupo/${idGrupo}`, { qos: 1 });
             
             moverChatAlPrincipio(idGrupo);
@@ -378,10 +379,8 @@
             clienteMqtt = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', opcionesMqtt);
 
             clienteMqtt.on('connect', () => {
-                // Chat personal
                 clienteMqtt.subscribe(`wasapedro/v3/chat/${miNombre}`, { qos: 1 });
                 
-                // Grupos en los que participo
                 Object.keys(datosGrupos).forEach(idGrupo => {
                     clienteMqtt.subscribe(`wasapedro/v3/grupo/${idGrupo}`, { qos: 1 });
                 });
@@ -395,7 +394,6 @@
 
             clienteMqtt.on('message', (topico, mensaje) => {
                 try {
-                    // Copias de seguridad remotas
                     if (gmailVinculado && topico === `wasapedro/v3/backup/${btoa(gmailVinculado)}`) {
                         const data = JSON.parse(mensaje.toString());
                         if (data.accion === "solicitar_backup" && data.usuario === miNombre) subirCopiaNube();
@@ -405,13 +403,12 @@
                     const data = JSON.parse(mensaje.toString());
                     if (!data.emisor || data.emisor === miNombre) return;
 
-                    let deQuien = data.emisor; // Para chats privados
+                    let deQuien = data.emisor; 
                     let esMensajeGrupo = topico.includes("/grupo/");
                     let idContenedorHistorial = esMensajeGrupo ? topico.split("/").pop() : deQuien;
 
                     if (listaBloqueados.includes(deQuien)) return;
 
-                    // Si es un grupo nuevo cuyo ID no tengo registrado en UI todavía
                     if (esMensajeGrupo && !datosGrupos[idContenedorHistorial]) {
                         datosGrupos[idContenedorHistorial] = { nombre: data.nombreGrupo || "Grupo de MQTT", creador: "Desconocido", esGrupo: true };
                         localStorage.setItem("wasapedro_datos_grupos", JSON.stringify(datosGrupos));
@@ -524,7 +521,6 @@
             if (!query || query === miNombre) return alert("ID o usuario inválido.");
             
             if (query.startsWith("grupo_")) {
-                // Es un grupo compartido por ID
                 if (!datosGrupos[query]) {
                     datosGrupos[query] = { nombre: "Grupo Unido por ID", creador: "Remoto", esGrupo: true };
                     localStorage.setItem("wasapedro_datos_grupos", JSON.stringify(datosGrupos));
@@ -542,7 +538,6 @@
         function actualizarListaAmigosUI() {
             const contenedor = document.getElementById("contenedor-lista-dinamica"); contenedor.innerHTML = "";
             
-            // Unir todos los chats conocidos y ordenarlos usando el orden de ordenChats
             let chatsCompletos = [...listaAmigosActivos].filter(c => !listaBloqueados.includes(c));
             
             chatsCompletos.sort((a, b) => {
@@ -607,7 +602,6 @@
             if(chatActivo === id) abrirChat(id);
         }
 
-        // --- NUEVA ACCIÓN: ELIMINAR CHAT DE LA LISTA DE GUARDADOS ---
         function menuEliminarChat(id) {
             if (confirm("¿Quieres eliminar este chat de la lista? Se borrará el historial local.")) {
                 listaAmigosActivos = listaAmigosActivos.filter(a => a !== id);
