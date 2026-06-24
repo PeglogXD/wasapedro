@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WasaPedro Premium v4</title>
+    <title>WasaPedro</title>
     <link rel="manifest" href="manifest.json"> 
     <meta name="theme-color" id="meta-theme" content="#00a884">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -22,120 +22,131 @@
         ::-webkit-scrollbar-thumb { background: #374c56; border-radius: 10px; }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col items-center justify-center p-4 bg-[#0b141a] text-[#e9edef] font-sans overflow-hidden select-none">
+<body class="h-screen w-screen flex flex-col bg-[#0b141a] text-[#e9edef] font-sans overflow-hidden select-none p-0">
 
-    <!-- 1. PANTALLA DE REGISTRO -->
-    <div id="pantalla-registro" class="bg-[#111b21] p-8 rounded-2xl shadow-2xl border border-[#222e35] max-w-sm w-full text-center hidden">
-        <h1 class="text-3xl font-extrabold text-[#00a884] mb-2 theme-text">WasaPedro</h1>
-        <p class="text-gray-400 text-sm mb-6">Ingresa tu usuario para iniciar sesión.</p>
-        
-        <input type="text" id="input-nombre" placeholder="Tu nombre de usuario..." class="w-full bg-[#2a3942] border-none text-white rounded-lg p-3 mb-2 focus:outline-none focus:ring-2 focus:ring-[#00a884]">
-        <p id="error-registro" class="text-xs text-red-400 mb-4 h-4 italic hidden">Este nombre ya está en uso. Elige otro.</p>
-        
-        <div class="bg-[#182229] p-3 rounded-xl border border-[#222e35] mb-4 text-left">
-            <label class="text-[10px] font-bold uppercase text-gray-400 block mb-1">¿Dispositivo nuevo? Pon tu correo vinculado:</label>
-            <input type="email" id="input-recuperar-email" placeholder="correo@institucion.edu (Opcional)" class="w-full bg-[#2a3942] text-xs text-white rounded p-2 focus:outline-none">
+    <div id="barra-ventana" class="w-full h-9 bg-[#00a884] theme-bg flex items-center justify-between px-4 flex-shrink-0 z-50 shadow-md transition-colors duration-200">
+        <div class="flex items-center gap-2 text-xs font-bold">
+            <i class="ph ph-chat-circle-dots text-sm"></i>
+            <span>WasaPedro</span>
         </div>
-
-        <button id="btn-guardar" class="w-full bg-[#00a884] theme-bg hover:opacity-90 text-[#111b21] font-bold p-3 rounded-lg transition disabled:opacity-50">Ingresar / Restaurar</button>
+        <div class="flex items-center gap-4 text-sm font-bold">
+            <button class="hover:opacity-70 transition"><i class="ph ph-key"></i></button>
+            <button class="hover:opacity-70 transition"><i class="ph ph-dots-three-vertical text-lg"></i></button>
+            <button class="hover:opacity-70 transition"><i class="ph ph-minus text-base"></i></button>
+            <button class="hover:opacity-70 transition"><i class="ph ph-square text-xs"></i></button>
+            <button class="hover:opacity-70 transition" onclick="alert('Ventana minimizada o cerrada virtualmente.')"><i class="ph ph-x text-base"></i></button>
+        </div>
     </div>
 
-    <!-- 2. INTERFAZ PRINCIPAL -->
-    <div id="interfaz-principal" class="w-full max-w-4xl h-[85vh] bg-[#111b21] rounded-2xl shadow-2xl border border-[#222e35] overflow-hidden hidden">
-        
-        <!-- SIDEBAR IZQUIERDO -->
-        <div class="w-1/3 border-r border-[#222e35] flex flex-col bg-[#111b21]">
-            <div class="p-4 bg-[#202d33] flex justify-between items-center">
-                <div class="flex items-center gap-3 min-w-0">
-                    <img id="avatar-usuario-img" src="" class="w-10 h-10 rounded-full object-cover hidden flex-shrink-0">
-                    <div id="avatar-usuario-txt" class="w-10 h-10 bg-[#00a884] theme-bg text-[#111b21] font-bold rounded-full flex items-center justify-center text-lg flex-shrink-0 hidden">?</div>
-                    <span id="nombre-usuario-pantalla" class="font-medium text-sm truncate">...</span>
-                </div>
-                <div class="flex gap-1">
-                    <button onclick="abrirModalGrupo()" class="text-xl text-gray-400 hover:text-white p-2 rounded-full transition" title="Crear Grupo">
-                        <i class="ph ph-users-three"></i>
-                    </button>
-                    <button id="btn-config" onclick="document.getElementById('modal-config').classList.remove('hidden')" class="text-xl text-gray-400 hover:text-white p-2 rounded-full transition" title="Configuración">
-                        <i class="ph ph-gear"></i>
-                    </button>
-                </div>
+    <div class="flex-1 w-full flex flex-col items-center justify-center p-4 overflow-hidden relative">
+
+        <div id="pantalla-registro" class="bg-[#111b21] p-8 rounded-2xl shadow-2xl border border-[#222e35] max-w-sm w-full text-center hidden z-10">
+            <h1 class="text-3xl font-extrabold text-[#00a884] mb-2 theme-text">WasaPedro</h1>
+            <p class="text-gray-400 text-sm mb-6">Ingresa tu usuario para iniciar sesión.</p>
+            
+            <input type="text" id="input-nombre" placeholder="Tu nombre de usuario..." class="w-full bg-[#2a3942] border-none text-white rounded-lg p-3 mb-2 focus:outline-none focus:ring-2 focus:ring-[#00a884]">
+            <p id="error-registro" class="text-xs text-red-400 mb-4 h-4 italic hidden">Este nombre ya está en uso. Elige otro.</p>
+            
+            <div class="bg-[#182229] p-3 rounded-xl border border-[#222e35] mb-4 text-left">
+                <label class="text-[10px] font-bold uppercase text-gray-400 block mb-1">¿Dispositivo nuevo? Pon tu correo vinculado:</label>
+                <input type="email" id="input-recuperar-email" placeholder="correo@institucion.edu (Opcional)" class="w-full bg-[#2a3942] text-xs text-white rounded p-2 focus:outline-none">
             </div>
 
-            <div class="p-3 bg-[#111b21] border-b border-[#222e35]">
-                <div class="flex flex-col gap-2 bg-[#202d33] rounded-lg p-2">
-                    <input type="text" id="input-buscar" placeholder="Nombre de amigo o ID de grupo..." class="bg-transparent text-xs w-full focus:outline-none text-white placeholder-gray-400">
-                    <button onclick="buscarAmigo()" class="bg-[#00a884] theme-bg text-[#111b21] text-xs font-bold py-1 px-2 rounded w-full">Abrir Chat / Unirse</button>
-                </div>
-            </div>
-
-            <div class="p-4 border-b border-[#222e35] bg-[#182229]">
-                <h2 class="text-xs font-bold tracking-wider text-gray-400 uppercase mb-2">Mensajes sin leer</h2>
-                <div id="lista-notificaciones" class="space-y-1 text-xs max-h-20 overflow-y-auto">
-                    <p class="italic text-gray-500">Sin mensajes nuevos.</p>
-                </div>
-            </div>
-
-            <div class="flex-1 overflow-y-auto p-2 space-y-1" id="lista-amigos">
-                <h2 class="text-xs font-bold tracking-wider text-gray-400 uppercase p-2">Chats Recientes</h2>
-                <div id="contenedor-lista-dinamica" class="space-y-1"></div>
-            </div>
+            <button id="btn-guardar" class="w-full bg-[#00a884] theme-bg hover:opacity-90 text-[#111b21] font-bold p-3 rounded-lg transition disabled:opacity-50">Ingresar / Restaurar</button>
         </div>
 
-        <!-- VENTANA DE CHAT VACÍA -->
-        <div class="flex-1 flex flex-col bg-[#222e35] bg-opacity-20" id="pantalla-chat-vacia">
-            <div class="m-auto text-center max-w-sm">
-                <h3 class="text-xl font-semibold text-gray-300">WasaPedro</h3>
-                <p class="text-sm text-gray-500 mt-2">Whatsapp para chromebooks institucionales</p>
-            </div>
-        </div>
+        <div id="interfaz-principal" class="w-full max-w-4xl h-[85vh] bg-[#111b21] rounded-2xl shadow-2xl border border-[#222e35] overflow-hidden hidden z-10">
+            
+            <div class="w-1/3 border-r border-[#222e35] flex flex-col bg-[#111b21]">
+                <div class="p-4 bg-[#202d33] flex justify-between items-center">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <img id="avatar-usuario-img" src="" class="w-10 h-10 rounded-full object-cover hidden flex-shrink-0">
+                        <div id="avatar-usuario-txt" class="w-10 h-10 bg-[#00a884] theme-bg text-[#111b21] font-bold rounded-full flex items-center justify-center text-lg flex-shrink-0 hidden">?</div>
+                        <span id="nombre-usuario-pantalla" class="font-medium text-sm truncate">...</span>
+                    </div>
+                    <div class="flex gap-1">
+                        <button onclick="abrirModalGrupo()" class="text-xl text-gray-400 hover:text-white p-2 rounded-full transition" title="Crear Grupo">
+                            <i class="ph ph-users-three"></i>
+                        </button>
+                        <button id="btn-config" onclick="document.getElementById('modal-config').classList.remove('hidden')" class="text-xl text-gray-400 hover:text-white p-2 rounded-full transition" title="Configuración">
+                            <i class="ph ph-gear"></i>
+                        </button>
+                    </div>
+                </div>
 
-        <!-- VENTANA DE CHAT ACTIVA -->
-        <div class="flex-1 flex flex-col bg-[#0b141a] relative hidden" id="pantalla-chat-activa">
-            <div id="zona-drop-visual" class="absolute inset-0 bg-[#00a884]/20 border-4 border-dashed border-[#00a884] z-50 flex flex-col items-center justify-center backdrop-blur-sm pointer-events-none transition-all duration-200 opacity-0">
-                <i class="ph ph-cloud-arrow-up text-6xl text-white mb-2 animate-bounce"></i>
-                <p class="text-lg font-bold text-white">¡Suelta el archivo para cargarlo!</p>
+                <div class="p-3 bg-[#111b21] border-b border-[#222e35]">
+                    <div class="flex flex-col gap-2 bg-[#202d33] rounded-lg p-2">
+                        <input type="text" id="input-buscar" placeholder="Nombre de amigo o ID de grupo..." class="bg-transparent text-xs w-full focus:outline-none text-white placeholder-gray-400">
+                        <button onclick="buscarAmigo()" class="bg-[#00a884] theme-bg text-[#111b21] text-xs font-bold py-1 px-2 rounded w-full">Abrir Chat / Unirse</button>
+                    </div>
+                </div>
+
+                <div class="p-4 border-b border-[#222e35] bg-[#182229]">
+                    <h2 class="text-xs font-bold tracking-wider text-gray-400 uppercase mb-2">Mensajes sin leer</h2>
+                    <div id="lista-notificaciones" class="space-y-1 text-xs max-h-20 overflow-y-auto">
+                        <p class="italic text-gray-500">Sin mensajes nuevos.</p>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-2 space-y-1" id="lista-amigos">
+                    <h2 class="text-xs font-bold tracking-wider text-gray-400 uppercase p-2">Chats Recientes</h2>
+                    <div id="contenedor-lista-dinamica" class="space-y-1"></div>
+                </div>
             </div>
 
-            <div class="p-4 bg-[#202d33] flex items-center justify-between border-b border-[#222e35]">
-                <div class="flex items-center gap-3">
-                    <img id="avatar-chat-img" src="" class="w-9 h-9 rounded-full object-cover hidden">
-                    <div class="w-9 h-9 bg-[#00a884] theme-bg text-black font-bold rounded-full flex items-center justify-center text-sm hidden" id="avatar-chat-txt">?</div>
-                    <div>
-                        <span id="nombre-chat-amigo" class="font-medium text-sm block">...</span>
-                        <span id="sub-chat-info" class="text-[10px] text-gray-400 block hidden"></span>
+            <div class="flex-1 flex flex-col bg-[#222e35] bg-opacity-20" id="pantalla-chat-vacia">
+                <div class="m-auto text-center max-w-sm">
+                    <h3 class="text-xl font-semibold text-gray-300">WasaPedro</h3>
+                    <p class="text-sm text-gray-500 mt-2">Whatsapp para chromebooks institucionales</p>
+                </div>
+            </div>
+
+            <div class="flex-1 flex flex-col bg-[#0b141a] relative hidden" id="pantalla-chat-activa">
+                <div id="zona-drop-visual" class="absolute inset-0 bg-[#00a884]/20 border-4 border-dashed border-[#00a884] z-50 flex flex-col items-center justify-center backdrop-blur-sm pointer-events-none transition-all duration-200 opacity-0">
+                    <i class="ph ph-cloud-arrow-up text-6xl text-white mb-2 animate-bounce"></i>
+                    <p class="text-lg font-bold text-white">¡Suelta el archivo para cargarlo!</p>
+                </div>
+
+                <div class="p-4 bg-[#202d33] flex items-center justify-between border-b border-[#222e35]">
+                    <div class="flex items-center gap-3">
+                        <img id="avatar-chat-img" src="" class="w-9 h-9 rounded-full object-cover hidden">
+                        <div class="w-9 h-9 bg-[#00a884] theme-bg text-black font-bold rounded-full flex items-center justify-center text-sm hidden" id="avatar-chat-txt">?</div>
+                        <div>
+                            <span id="nombre-chat-amigo" class="font-medium text-sm block">...</span>
+                            <span id="sub-chat-info" class="text-[10px] text-gray-400 block hidden"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="relative">
+                        <button onclick="toggleMenuOpcionesChat()" class="text-xl text-gray-400 hover:text-white p-2 rounded-full transition" title="Opciones de chat">
+                            <i class="ph ph-dots-three-vertical text-2xl"></i>
+                        </button>
+                        <div id="menu-opciones-chat" class="absolute right-0 mt-2 w-48 bg-[#202d33] border border-[#222e35] rounded-xl shadow-xl hidden z-50 py-1 text-sm">
+                            <button onclick="menuPonerApodo()" class="w-full text-left px-4 py-2 hover:bg-[#2a3942] text-gray-200 flex items-center gap-2"><i class="ph ph-pencil"></i> Poner Apodo</button>
+                            <button onclick="menuBorrarChat()" class="w-full text-left px-4 py-2 hover:bg-[#2a3942] text-gray-200 flex items-center gap-2"><i class="ph ph-trash"></i> Borrar Chat</button>
+                            <button id="btn-menu-bloquear" onclick="menuBloquearContacto()" class="w-full text-left px-4 py-2 hover:bg-[#2a3942] text-gray-200 flex items-center gap-2"><i class="ph ph-prohibit"></i> Bloquear</button>
+                            <hr class="border-[#222e35] my-1">
+                            <button onclick="abrirModalReporte()" class="w-full text-left px-4 py-2 hover:bg-red-600/20 text-red-400 flex items-center gap-2"><i class="ph ph-warning-octagon"></i> Denunciar</button>
+                        </div>
                     </div>
                 </div>
                 
-                <!-- MENÚ DE OPCIONES DESPLEGABLE RESTAURADO -->
-                <div class="relative">
-                    <button onclick="toggleMenuOpcionesChat()" class="text-xl text-gray-400 hover:text-white p-2 rounded-full transition" title="Opciones de chat">
-                        <i class="ph ph-dots-three-vertical text-2xl"></i>
+                <div class="flex-1 overflow-y-auto p-4 space-y-3" id="contenedor-mensajes"></div>
+                
+                <div class="p-4 bg-[#202d33] flex gap-3 items-center relative">
+                    <input type="file" id="input-archivo" class="hidden" onchange="procesarArchivoAdjunto(this.files[0])">
+                    <button onclick="document.getElementById('input-archivo').click()" class="text-2xl text-gray-400 hover:text-white transition p-1 flex items-center justify-center bg-[#2a3942] rounded-full w-9 h-9 hover:bg-[#374c56]">
+                        <i class="ph ph-plus"></i>
                     </button>
-                    <div id="menu-opciones-chat" class="absolute right-0 mt-2 w-48 bg-[#202d33] border border-[#222e35] rounded-xl shadow-xl hidden z-50 py-1 text-sm">
-                        <button onclick="menuPonerApodo()" class="w-full text-left px-4 py-2 hover:bg-[#2a3942] text-gray-200 flex items-center gap-2"><i class="ph ph-pencil"></i> Poner Apodo</button>
-                        <button onclick="menuBorrarChat()" class="w-full text-left px-4 py-2 hover:bg-[#2a3942] text-gray-200 flex items-center gap-2"><i class="ph ph-trash"></i> Borrar Chat</button>
-                        <button id="btn-menu-bloquear" onclick="menuBloquearContacto()" class="w-full text-left px-4 py-2 hover:bg-[#2a3942] text-gray-200 flex items-center gap-2"><i class="ph ph-prohibit"></i> Bloquear</button>
-                        <hr class="border-[#222e35] my-1">
-                        <button onclick="abrirModalReporte()" class="w-full text-left px-4 py-2 hover:bg-red-600/20 text-red-400 flex items-center gap-2"><i class="ph ph-warning-octagon"></i> Denunciar</button>
-                    </div>
+                    <input type="text" id="input-mensaje" placeholder="Escribe un mensaje..." class="flex-1 bg-[#2a3942] rounded-lg p-3 text-sm text-white focus:outline-none">
+                    <button onclick="enviarMensajeTexto()" class="bg-[#00a884] theme-bg text-[#111b21] font-bold px-5 py-3 rounded-lg text-sm hover:opacity-90">Enviar</button>
                 </div>
             </div>
-            
-            <div class="flex-1 overflow-y-auto p-4 space-y-3" id="contenedor-mensajes"></div>
-            
-            <div class="p-4 bg-[#202d33] flex gap-3 items-center relative">
-                <input type="file" id="input-archivo" class="hidden" onchange="procesarArchivoAdjunto(this.files[0])">
-                <button onclick="document.getElementById('input-archivo').click()" class="text-2xl text-gray-400 hover:text-white transition p-1 flex items-center justify-center bg-[#2a3942] rounded-full w-9 h-9 hover:bg-[#374c56]">
-                    <i class="ph ph-plus"></i>
-                </button>
-                <input type="text" id="input-mensaje" placeholder="Escribe un mensaje..." class="flex-1 bg-[#2a3942] rounded-lg p-3 text-sm text-white focus:outline-none">
-                <button onclick="enviarMensajeTexto()" class="bg-[#00a884] theme-bg text-[#111b21] font-bold px-5 py-3 rounded-lg text-sm hover:opacity-90">Enviar</button>
-            </div>
+
         </div>
 
     </div>
 
-    <!-- MODAL GRUPO -->
     <div id="modal-grupo" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-sm rounded-2xl p-6 shadow-2xl">
             <h2 class="text-lg font-bold text-white mb-3 flex items-center gap-2"><i class="ph ph-users-three text-[#00a884] theme-text"></i> Crear Nuevo Grupo</h2>
@@ -148,7 +159,6 @@
         </div>
     </div>
 
-    <!-- MODAL CROPPIE -->
     <div id="modal-crop" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-[60]">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-sm rounded-2xl p-5 shadow-2xl flex flex-col">
             <h2 class="text-sm font-bold text-white mb-4 text-center">Ajusta tu foto de perfil</h2>
@@ -162,7 +172,6 @@
         </div>
     </div>
 
-    <!-- MODAL CONFIGURACIÓN -->
     <div id="modal-config" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-md rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
@@ -170,7 +179,6 @@
                 <button onclick="document.getElementById('modal-config').classList.add('hidden')" class="text-gray-400 hover:text-white text-lg"><i class="ph ph-x"></i></button>
             </div>
 
-            <!-- SECCIÓN CUENTA -->
             <div class="mb-6 p-4 bg-[#182229] border border-[#222e35] rounded-xl">
                 <label class="text-xs font-bold uppercase tracking-wider text-[#00a884] theme-text block mb-3 flex items-center gap-1">
                     <i class="ph ph-user-circle-gear text-base"></i> Cuenta y Foto de Perfil
@@ -232,7 +240,6 @@
         </div>
     </div>
 
-    <!-- MODAL DE DENUNCIAS -->
     <div id="modal-reporte" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-[70]">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-sm rounded-2xl p-6 shadow-2xl">
             <h2 class="text-lg font-bold text-red-500 mb-2 flex items-center gap-2">
@@ -247,7 +254,6 @@
         </div>
     </div>
 
-    <!-- MODAL CONTRASEÑA ADMIN -->
     <div id="modal-admin-login" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-[70]">
         <div class="bg-[#111b21] border-2 border-yellow-600 w-full max-w-xs rounded-xl p-6 shadow-2xl text-center">
             <i class="ph ph-shield-star text-4xl text-yellow-500 mb-2"></i>
@@ -260,7 +266,6 @@
         </div>
     </div>
 
-    <!-- PANEL COMPLETO DE CONTROL ADMIN -->
     <div id="modal-admin-panel" class="fixed inset-0 bg-black/90 flex items-center justify-center p-4 hidden z-[80]">
         <div class="bg-[#111b21] border border-yellow-600 w-full max-w-2xl h-[80vh] rounded-2xl p-6 shadow-2xl flex flex-col">
             <div class="flex justify-between items-center mb-4 border-b border-[#222e35] pb-4">
@@ -337,8 +342,6 @@
             }
         }
 
-        inicializarUI();
-
         function renderizarMisAvatars() {
             const txtAvatar = document.getElementById("avatar-usuario-txt");
             const imgAvatar = document.getElementById("avatar-usuario-img");
@@ -391,7 +394,6 @@
                 renderizarMisAvatars();
                 cancelarRecorte();
                 
-                // PUBLICAR NUEVA FOTO EN TIEMPO REAL A TODOS LOS CONTACTOS
                 if (clienteMqtt && clienteMqtt.connected) {
                     clienteMqtt.publish(`wasapedro/v3/status/fotos`, JSON.stringify({ usuario: miNombre, foto: miFotoB64 }), { retain: true });
                 }
@@ -464,12 +466,11 @@
             clienteMqtt.on('connect', () => {
                 clienteMqtt.subscribe(`wasapedro/v3/chat/${miNombre}`);
                 clienteMqtt.subscribe(`wasapedro/v3/sistema/bans`); 
-                clienteMqtt.subscribe(`wasapedro/v3/status/fotos`); // Canal global de sincronización de fotos
+                clienteMqtt.subscribe(`wasapedro/v3/status/fotos`); 
                 
                 Object.keys(datosGrupos).forEach(id => clienteMqtt.subscribe(`wasapedro/v3/grupo/${id}`));
                 if (esAdmin) { clienteMqtt.subscribe(`wasapedro/v3/sistema/reportes`); }
 
-                // Publicar nuestra foto de perfil actual retenida para los que se conecten
                 if (miFotoB64) {
                     clienteMqtt.publish(`wasapedro/v3/status/fotos`, JSON.stringify({ usuario: miNombre, foto: miFotoB64 }), { retain: true });
                 }
@@ -481,7 +482,6 @@
                 try {
                     const data = JSON.parse(mensaje.toString());
 
-                    // ESCUCHAR ACTUALIZACIONES DE FOTOS EN TIEMPO REAL
                     if (topico === `wasapedro/v3/status/fotos`) {
                         if (data.usuario && data.usuario !== miNombre) {
                             fotosAmigos[data.usuario] = data.foto;
@@ -494,7 +494,6 @@
                         return;
                     }
 
-                    // ESCUCHAR EXPULSIONES (BANEOS) GLOBALMENTE
                     if (topico === `wasapedro/v3/sistema/bans`) {
                         if (data.usuarioBaneado === miNombre) {
                             alert(`🚨 Has sido baneado permanentemente de WasaPedro.\nMotivo: ${data.motivo}`);
@@ -503,7 +502,6 @@
                         return;
                     }
 
-                    // ESCUCHAR ENTRADA DE REPORTES (SOLO ADMINS)
                     if (topico === `wasapedro/v3/sistema/reportes` && esAdmin) {
                         if (!reportesRecibidos.some(r => r.id === data.id)) {
                             reportesRecibidos.push(data);
@@ -572,7 +570,6 @@
             
             document.getElementById("nombre-chat-amigo").textContent = nombreMostrar;
             
-            // Configurar el botón de bloquear del menú contextual
             const btnBloquear = document.getElementById("btn-menu-bloquear");
             if (esGrupo) {
                 btnBloquear.classList.add("hidden");
@@ -641,10 +638,14 @@
             renderizarMensajes();
         }
 
+        // --- RENDERIZAR MENSAJES (CORREGIDO CON COLOR DINÁMICO) ---
         function renderizarMensajes() {
             const contenedor = document.getElementById("contenedor-mensajes");
             contenedor.innerHTML = "";
             const lista = historialesDeChats[chatActivo] || [];
+
+            // Determinar color de texto idóneo para la burbuja según contraste
+            const colorTextoMsg = (temaActual === '#00a884') ? '#111b21' : '#ffffff';
 
             lista.forEach(m => {
                 const soyYo = m.emisor === miNombre;
@@ -652,13 +653,15 @@
                 d.className = `flex flex-col max-w-[75%] ${soyYo ? 'ml-auto items-end' : 'mr-auto items-start'} mb-2`;
                 
                 let cuerpo = "";
-                // ARRIBA DE CADA MENSAJE SE COLOCA EL EMISOR CORREGIDO (EVITANDO UNDEFINED)
                 if(!soyYo && datosGrupos[chatActivo]) {
                     const nombreEmisor = m.emisor || "Usuario";
                     cuerpo += `<span class="text-[10px] text-gray-400 font-bold mb-0.5">~${nombreEmisor}</span>`;
                 }
                 
-                cuerpo += `<div class="p-3 rounded-xl text-sm ${soyYo ? 'bg-[#00a884] text-black font-medium' : 'bg-[#202d33] text-gray-100'}">`;
+                // Inyección dinámica de estilos en línea en lugar del fondo estático antiguo
+                let estiloBubble = soyYo ? `style="background-color: ${temaActual}; color: ${colorTextoMsg};"` : '';
+                
+                cuerpo += `<div ${estiloBubble} class="p-3 rounded-xl text-sm ${soyYo ? 'font-medium shadow-sm' : 'bg-[#202d33] text-gray-100'}">`;
                 if(m.archivoB64) {
                     if(m.tipoArchivo?.startsWith("image/")) cuerpo += `<img src="${m.archivoB64}" class="max-w-xs rounded mb-1 cursor-pointer">`;
                     else cuerpo += `<a href="${m.archivoB64}" download="${m.nombreArchivo}" class="underline text-blue-400 block">${m.nombreArchivo || 'Descargar archivo'}</a>`;
@@ -731,7 +734,6 @@
             menu.classList.toggle("hidden");
         }
 
-        // Ocultar menú si se hace click en otro lado
         document.addEventListener("click", function(e) {
             const menu = document.getElementById("menu-opciones-chat");
             const btn = menu?.previousElementSibling;
@@ -808,16 +810,33 @@
             if (chatActivo === u) abrirChat(u);
         }
 
-        // --- SISTEMA CONFIGURACIÓN GENERAL ---
+        // --- CAMBIAR TEMA (SOPORTE TOTALMENTE REACTIVO) ---
         function cambiarTema(c) {
             temaActual = c;
             localStorage.setItem("wasapedro_theme_color", c);
             aplicarColorTema(c);
         }
+
         function aplicarColorTema(c) {
             document.querySelectorAll(".theme-bg").forEach(el => el.style.backgroundColor = c);
             document.querySelectorAll(".theme-text").forEach(el => el.style.color = c);
+            
+            // Corrección de contraste en la barra superior de la ventana
+            const colorTextoBarra = (c === '#00a884') ? '#111b21' : '#ffffff';
+            const barra = document.getElementById("barra-ventana");
+            if (barra) {
+                barra.style.color = colorTextoBarra;
+                barra.querySelectorAll("button, span, i").forEach(child => {
+                    child.style.color = colorTextoBarra;
+                });
+            }
+            
+            // Forzar actualización inmediata en los globos de texto activos
+            if (chatActivo) {
+                renderizarMensajes();
+            }
         }
+
         function guardarCorreoVinculado() {
             gmailVinculado = document.getElementById("input-cuenta-gmail").value.trim().toLowerCase();
             localStorage.setItem("wasapedro_gmail_link", gmailVinculado);
@@ -877,7 +896,7 @@
             lector.readAsDataURL(archivo);
         }
 
-        // --- 🛡️ FUNCIONES DE ADMINISTRACIÓN Y REPORTES ---
+        // --- FUNCIONES DE ADMINISTRACIÓN Y REPORTES ---
         function abrirModalReporte() {
             if(!chatActivo) return;
             document.getElementById("menu-opciones-chat").classList.add("hidden");
@@ -971,6 +990,7 @@
             }
         }
 
+        // --- SISTEMA EJECUTAR BANEO ---
         function ejecutarBaneo(usuarioTarget) {
             if (usuarioTarget === miNombre) return alert("No puedes autosancionarte.");
             const razon = prompt(`Introduce la razón del baneo permanente para @${usuarioTarget}:`);
@@ -993,6 +1013,9 @@
         document.getElementById("input-mensaje")?.addEventListener("keypress", function(e) {
             if (e.key === "Enter") enviarMensajeTexto();
         });
+
+        // Lanzamiento inicial de la interfaz
+        inicializarUI();
     </script>
 </body>
 </html>
