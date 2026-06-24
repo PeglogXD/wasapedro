@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WasaPedro Premium v4 + Moderación</title>
+    <title>WasaPedro Premium v4 + Control de Administración</title>
     <link rel="manifest" href="manifest.json"> 
     <meta name="theme-color" id="meta-theme" content="#00a884">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,6 +14,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
     
     <style>
+        /* Estilos personalizados para el slider de Croppie */
         .cr-slider-path { background: #2a3942 !important; height: 6px !important; }
         .cr-slider-handle { background: #00a884 !important; border: none !important; width: 16px !important; height: 16px !important; top: -5px !important; }
         .cr-boundary { border-radius: 12px !important; overflow: hidden !important; }
@@ -32,7 +33,7 @@
         <p id="error-registro" class="text-xs text-red-400 mb-4 h-4 italic hidden">Este nombre ya está en uso. Elige otro.</p>
         
         <div class="bg-[#182229] p-3 rounded-xl border border-[#222e35] mb-4 text-left">
-            <label class="text-[10px] font-bold uppercase text-gray-400 block mb-1">¿Dispositivo nuevo? Pon tu correo:</label>
+            <label class="text-[10px] font-bold uppercase text-gray-400 block mb-1">¿Dispositivo nuevo? Pon tu correo vinculado:</label>
             <input type="email" id="input-recuperar-email" placeholder="correo@institucion.edu (Opcional)" class="w-full bg-[#2a3942] text-xs text-white rounded p-2 focus:outline-none">
         </div>
 
@@ -65,6 +66,13 @@
                 </div>
             </div>
 
+            <div class="p-4 border-b border-[#222e35] bg-[#182229]">
+                <h2 class="text-xs font-bold tracking-wider text-gray-400 uppercase mb-2">Mensajes sin leer</h2>
+                <div id="lista-notificaciones" class="space-y-1 text-xs max-h-20 overflow-y-auto">
+                    <p class="italic text-gray-500">Sin mensajes nuevos.</p>
+                </div>
+            </div>
+
             <div class="flex-1 overflow-y-auto p-2 space-y-1" id="lista-amigos">
                 <h2 class="text-xs font-bold tracking-wider text-gray-400 uppercase p-2">Chats Recientes</h2>
                 <div id="contenedor-lista-dinamica" class="space-y-1"></div>
@@ -74,11 +82,16 @@
         <div class="flex-1 flex flex-col bg-[#222e35] bg-opacity-20" id="pantalla-chat-vacia">
             <div class="m-auto text-center max-w-sm">
                 <h3 class="text-xl font-semibold text-gray-300">WasaPedro Pro Plus</h3>
-                <p class="text-sm text-gray-500 mt-2">Selecciona un chat para comenzar a enviar mensajes.</p>
+                <p class="text-sm text-gray-500 mt-2">Ahora con soporte de Grupos, Orden Dinámico por Mensaje y Foto de Perfil Cloud.</p>
             </div>
         </div>
 
         <div class="flex-1 flex flex-col bg-[#0b141a] relative hidden" id="pantalla-chat-activa">
+            <div id="zona-drop-visual" class="absolute inset-0 bg-[#00a884]/20 border-4 border-dashed border-[#00a884] z-50 flex flex-col items-center justify-center backdrop-blur-sm pointer-events-none transition-all duration-200 opacity-0">
+                <i class="ph ph-cloud-arrow-up text-6xl text-white mb-2 animate-bounce"></i>
+                <p class="text-lg font-bold text-white">¡Suelta el archivo para cargarlo!</p>
+            </div>
+
             <div class="p-4 bg-[#202d33] flex items-center justify-between border-b border-[#222e35]">
                 <div class="flex items-center gap-3">
                     <img id="avatar-chat-img" src="" class="w-9 h-9 rounded-full object-cover hidden">
@@ -88,14 +101,18 @@
                         <span id="sub-chat-info" class="text-[10px] text-gray-400 block hidden"></span>
                     </div>
                 </div>
-                <button onclick="abrirModalReporte()" id="btn-abrir-reporte" class="text-red-500 hover:bg-red-500/20 p-2 rounded-full transition hidden" title="Denunciar Usuario">
-                    <i class="ph ph-warning-octagon text-xl"></i>
+                <button onclick="abrirModalReporte()" id="btn-abrir-reporte" class="text-red-500 hover:bg-red-500/10 p-2 rounded-full transition hidden" title="Denunciar Usuario/Grupo">
+                    <i class="ph ph-warning-octagon text-2xl"></i>
                 </button>
             </div>
             
             <div class="flex-1 overflow-y-auto p-4 space-y-3" id="contenedor-mensajes"></div>
             
             <div class="p-4 bg-[#202d33] flex gap-3 items-center relative">
+                <input type="file" id="input-archivo" class="hidden" onchange="procesarArchivoAdjunto(this.files[0])">
+                <button onclick="document.getElementById('input-archivo').click()" class="text-2xl text-gray-400 hover:text-white transition p-1 flex items-center justify-center bg-[#2a3942] rounded-full w-9 h-9 hover:bg-[#374c56]">
+                    <i class="ph ph-plus"></i>
+                </button>
                 <input type="text" id="input-mensaje" placeholder="Escribe un mensaje..." class="flex-1 bg-[#2a3942] rounded-lg p-3 text-sm text-white focus:outline-none">
                 <button onclick="enviarMensajeTexto()" class="bg-[#00a884] theme-bg text-[#111b21] font-bold px-5 py-3 rounded-lg text-sm hover:opacity-90">Enviar</button>
             </div>
@@ -105,7 +122,8 @@
 
     <div id="modal-grupo" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-sm rounded-2xl p-6 shadow-2xl">
-            <h2 class="text-lg font-bold text-white mb-3 flex items-center gap-2"><i class="ph ph-users-three text-[#00a884] theme-text"></i> Crear Grupo</h2>
+            <h2 class="text-lg font-bold text-white mb-3 flex items-center gap-2"><i class="ph ph-users-three text-[#00a884] theme-text"></i> Crear Nuevo Grupo</h2>
+            <p class="text-xs text-gray-400 mb-4">Dale un nombre a tu grupo. Al crearlo, te daremos un ID único para compartir.</p>
             <input type="text" id="input-nombre-grupo" placeholder="Nombre del grupo..." class="w-full bg-[#2a3942] border-none text-sm text-white rounded-lg p-3 mb-4 focus:outline-none">
             <div class="flex gap-2 justify-end">
                 <button onclick="cerrarModalGrupo()" class="px-4 py-2 text-xs bg-transparent text-gray-400 hover:text-white">Cancelar</button>
@@ -114,18 +132,40 @@
         </div>
     </div>
 
+    <div id="modal-crop" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-[60]">
+        <div class="bg-[#111b21] border border-[#222e35] w-full max-w-sm rounded-2xl p-5 shadow-2xl flex flex-col">
+            <h2 class="text-sm font-bold text-white mb-4 text-center">Ajusta tu foto de perfil</h2>
+            <div id="contenedor-croppie" class="w-full h-64 bg-[#182229] rounded-xl overflow-hidden mb-2"></div>
+            <div class="flex gap-3 justify-center pt-3">
+                <button onclick="cancelarRecorte()" class="px-5 py-2 text-xs bg-[#2a3942] text-gray-200 rounded-lg hover:bg-[#374c56]">Cancelar</button>
+                <button onclick="finalizarRecorte()" class="px-5 py-2 text-xs bg-[#00a884] theme-bg text-black font-bold rounded-lg hover:opacity-90 flex items-center gap-1">
+                    <i class="ph ph-crop"></i> Guardar Recorte
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="modal-config" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-md rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold text-white flex items-center gap-2"><i class="ph ph-gear"></i> Ajustes</h2>
+                <h2 class="text-xl font-bold text-white flex items-center gap-2"><i class="ph ph-gear"></i> Ajustes Personalizados</h2>
                 <button onclick="document.getElementById('modal-config').classList.add('hidden')" class="text-gray-400 hover:text-white text-lg"><i class="ph ph-x"></i></button>
             </div>
 
             <div class="mb-6 p-4 bg-[#182229] border border-[#222e35] rounded-xl">
+                <label class="text-xs font-bold uppercase tracking-wider text-[#00a884] theme-text block mb-3 flex items-center gap-1">
+                    <i class="ph ph-user-circle-gear text-base"></i> Cuenta y Foto de Perfil
+                </label>
+                
                 <div class="flex items-center gap-4 mb-4 bg-[#111b21] p-3 rounded-lg border border-[#222e35]">
                     <div class="relative group flex-shrink-0">
                         <img id="preview-config-avatar" src="" class="w-16 h-16 rounded-full object-cover bg-gray-700 hidden">
                         <div id="preview-config-txt" class="w-16 h-16 bg-[#00a884] theme-bg text-black font-bold text-2xl rounded-full flex items-center justify-center hidden">?</div>
+                        
+                        <label for="input-avatar-file" class="absolute inset-0 bg-black/60 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition text-[9px] text-white text-center font-bold p-1">
+                            <i class="ph ph-camera text-base mb-1"></i> Cambiar y Recortar
+                        </label>
+                        <input type="file" id="input-avatar-file" class="hidden" accept="image/png, image/jpeg, image/jpg" onchange="iniciarProcesoRecorte(this.files[0])">
                     </div>
                     <div class="flex-1 min-w-0">
                         <span class="text-xs text-gray-400 block">Usuario activo</span>
@@ -133,25 +173,42 @@
                     </div>
                 </div>
 
-                <div class="pt-2 flex gap-2">
-                    <button onclick="cerrarSesionLimpiar()" class="w-full bg-red-500/10 border border-red-500/30 text-red-400 py-2 px-3 rounded text-xs hover:bg-red-500 hover:text-white transition">Cerrar Sesión</button>
+                <div class="space-y-3">
+                    <div>
+                        <span class="text-[10px] text-gray-400 block mb-1">Correo Electrónico Vinculado:</span>
+                        <div class="flex gap-2">
+                            <input type="email" id="input-cuenta-gmail" placeholder="tu-correo@ejemplo.com" class="flex-1 bg-[#2a3942] text-xs p-2 rounded text-white focus:outline-none">
+                            <button onclick="guardarCorreoVinculado()" class="bg-[#202d33] text-white border border-gray-600 px-3 rounded text-xs hover:bg-[#2a3942]">Vincular</button>
+                        </div>
+                    </div>
+                    <div class="pt-2 flex flex-wrap gap-2">
+                        <button onclick="subirCopiaNube()" class="flex-1 bg-[#00a884] theme-bg text-black font-bold py-2 px-3 rounded text-xs text-center hover:opacity-90 flex items-center justify-center gap-1">
+                            <i class="ph ph-cloud-arrow-up text-sm"></i> Guardar Todo en Nube
+                        </button>
+                        <button onclick="abrirModalAdminLogin()" class="bg-yellow-600/20 border border-yellow-600/40 text-yellow-500 font-bold py-2 px-4 rounded text-xs hover:bg-yellow-600 hover:text-black transition flex items-center justify-center gap-1">
+                            <i class="ph ph-shield-star text-sm"></i> Rol
+                        </button>
+                        <button onclick="cerrarSesionLimpiar()" class="bg-red-500/10 border border-red-500/30 text-red-400 py-2 px-3 rounded text-xs hover:bg-red-500 hover:text-white transition">
+                            Cerrar Sesión
+                        </button>
+                    </div>
+                    <p id="status-cloud" class="text-[10px] italic text-gray-400 text-center h-3"></p>
                 </div>
             </div>
             
             <div class="mb-6">
                 <label class="text-xs font-bold uppercase tracking-wider text-gray-400 block mb-3">Color de la interfaz</label>
                 <div class="grid grid-cols-4 gap-2">
-                    <button onclick="cambiarTema('#00a884')" class="w-full h-10 bg-[#00a884] rounded-lg font-bold text-xs text-black">Verde</button>
-                    <button onclick="cambiarTema('#007acc')" class="w-full h-10 bg-[#007acc] rounded-lg font-bold text-xs text-white">Azul</button>
-                    <button onclick="cambiarTema('#a855f7')" class="w-full h-10 bg-[#a855f7] rounded-lg font-bold text-xs text-white">Morado</button>
-                    <button onclick="cambiarTema('#ef4444')" class="w-full h-10 bg-[#ef4444] rounded-lg font-bold text-xs text-white">Rojo</button>
+                    <button onclick="cambiarTema('#00a884')" class="w-full h-10 bg-[#00a884] rounded-lg font-bold text-xs text-black flex items-center justify-center">Verde</button>
+                    <button onclick="cambiarTema('#007acc')" class="w-full h-10 bg-[#007acc] rounded-lg font-bold text-xs text-white flex items-center justify-center">Azul</button>
+                    <button onclick="cambiarTema('#a855f7')" class="w-full h-10 bg-[#a855f7] rounded-lg font-bold text-xs text-white flex items-center justify-center">Morado</button>
+                    <button onclick="cambiarTema('#ef4444')" class="w-full h-10 bg-[#ef4444] rounded-lg font-bold text-xs text-white flex items-center justify-center">Rojo</button>
                 </div>
             </div>
 
-            <div class="mt-4 border-t border-[#222e35] pt-4">
-                <button onclick="document.getElementById('modal-admin-login').classList.remove('hidden')" class="w-full bg-yellow-600/10 border border-yellow-600/30 text-yellow-500 font-bold py-3 px-3 rounded-lg text-xs hover:bg-yellow-600 hover:text-white transition flex items-center justify-center gap-2">
-                    <i class="ph ph-shield-star text-base"></i> Configurar Rol (Admin)
-                </button>
+            <div>
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400 block mb-2">Contactos Bloqueados</label>
+                <div id="contenedor-bloqueados" class="bg-[#182229] border border-[#222e35] rounded-xl p-3 max-h-32 overflow-y-auto space-y-2"></div>
             </div>
         </div>
     </div>
@@ -159,25 +216,25 @@
     <div id="modal-reporte" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-[70]">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-sm rounded-2xl p-6 shadow-2xl">
             <h2 class="text-lg font-bold text-red-500 mb-2 flex items-center gap-2">
-                <i class="ph ph-warning-octagon text-xl"></i> Denunciar Usuario
+                <i class="ph ph-warning-octagon text-xl"></i> Denunciar Conversación
             </h2>
-            <p class="text-xs text-gray-400 mb-4">Estás a punto de reportar a <strong id="nombre-reportado-txt" class="text-white">...</strong>.</p>
-            <textarea id="input-motivo-reporte" rows="3" placeholder="Escribe el motivo de tu denuncia detalladamente..." class="w-full bg-[#2a3942] border-none text-sm text-white rounded-lg p-3 mb-4 focus:outline-none resize-none"></textarea>
+            <p class="text-xs text-gray-400 mb-4">Estás reportando a: <strong id="nombre-reportado-txt" class="text-white">...</strong></p>
+            <textarea id="input-motivo-reporte" rows="4" placeholder="Explica detalladamente el motivo de tu denuncia..." class="w-full bg-[#2a3942] border-none text-sm text-white rounded-lg p-3 mb-4 focus:outline-none resize-none focus:ring-1 focus:ring-red-500"></textarea>
             <div class="flex gap-2 justify-end">
                 <button onclick="cerrarModalReporte()" class="px-4 py-2 text-xs bg-transparent text-gray-400 hover:text-white">Cancelar</button>
-                <button onclick="enviarReporte()" class="px-4 py-2 text-xs bg-red-600 text-white font-bold rounded-lg hover:bg-red-700">Enviar Denuncia</button>
+                <button onclick="enviarReporte()" class="px-4 py-2 text-xs bg-red-600 text-white font-bold rounded-lg hover:bg-red-700">Enviar Reporte</button>
             </div>
         </div>
     </div>
 
     <div id="modal-admin-login" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-[70]">
-        <div class="bg-[#111b21] border border-yellow-600 w-full max-w-xs rounded-2xl p-6 shadow-2xl text-center">
+        <div class="bg-[#111b21] border-2 border-yellow-600 w-full max-w-xs rounded-xl p-6 shadow-2xl text-center">
             <i class="ph ph-shield-star text-4xl text-yellow-500 mb-2"></i>
-            <h2 class="text-lg font-bold text-white mb-4">Acceso Administrativo</h2>
-            <input type="password" id="input-admin-pass" placeholder="Contraseña..." class="w-full bg-[#2a3942] border border-[#222e35] text-sm text-white rounded-lg p-3 mb-4 focus:outline-none focus:border-yellow-500 text-center">
+            <h2 class="text-md font-bold text-white mb-4">Verificar Rol de Administrador</h2>
+            <input type="password" id="input-admin-pass" placeholder="Introduce la contraseña..." class="w-full bg-[#2a3942] border border-[#222e35] text-sm text-white rounded-lg p-3 mb-4 focus:outline-none focus:border-yellow-500 text-center">
             <div class="flex gap-2 justify-center">
                 <button onclick="document.getElementById('modal-admin-login').classList.add('hidden')" class="px-4 py-2 text-xs text-gray-400 hover:text-white">Cancelar</button>
-                <button onclick="verificarAdmin()" class="px-4 py-2 text-xs bg-yellow-600 text-white font-bold rounded-lg hover:bg-yellow-700">Verificar</button>
+                <button onclick="verificarAdmin()" class="px-4 py-2 text-xs bg-yellow-600 text-black font-bold rounded-lg hover:bg-yellow-500">Verificar</button>
             </div>
         </div>
     </div>
@@ -185,90 +242,204 @@
     <div id="modal-admin-panel" class="fixed inset-0 bg-black/90 flex items-center justify-center p-4 hidden z-[80]">
         <div class="bg-[#111b21] border border-yellow-600 w-full max-w-2xl h-[80vh] rounded-2xl p-6 shadow-2xl flex flex-col">
             <div class="flex justify-between items-center mb-4 border-b border-[#222e35] pb-4">
-                <h2 class="text-xl font-bold text-yellow-500 flex items-center gap-2"><i class="ph ph-shield-check"></i> Panel de Moderación</h2>
-                <button onclick="cerrarPanelAdmin()" class="text-gray-400 hover:text-white text-lg"><i class="ph ph-x"></i></button>
+                <h2 class="text-xl font-bold text-yellow-500 flex items-center gap-2"><i class="ph ph-shield-check"></i> Consola Central de Moderación</h2>
+                <button onclick="document.getElementById('modal-admin-panel').classList.add('hidden')" class="text-gray-400 hover:text-white text-lg"><i class="ph ph-x"></i></button>
             </div>
             <div class="flex-1 overflow-y-auto space-y-3" id="lista-denuncias-admin">
-                <p class="text-sm text-gray-500 italic text-center mt-10">Cargando denuncias...</p>
+                <p class="text-sm text-gray-500 italic text-center mt-10">Buzón de denuncias vacío o cargando...</p>
             </div>
         </div>
     </div>
 
+
     <script>
-        // --- 1. VARIABLES GLOBALES ---
+        // --- INICIALIZACIÓN DE VARIABLES DESDE MEMORIA LOCAL ---
         let miNombre = localStorage.getItem("wasapedro_mqtt_name") || "";
         let miFotoB64 = localStorage.getItem("wasapedro_my_avatar") || "";
         let clienteMqtt = null;
         let chatActivo = null;
+        let instanciaCroppie = null; 
         
         let listaAmigosActivos = JSON.parse(localStorage.getItem("wasapedro_amigos_list")) || [];
         let historialesDeChats = JSON.parse(localStorage.getItem("wasapedro_historiales")) || {};
+        let apodosContactos = JSON.parse(localStorage.getItem("wasapedro_apodos")) || {};
+        let listaBloqueados = JSON.parse(localStorage.getItem("wasapedro_bloqueados")) || [];
         let datosGrupos = JSON.parse(localStorage.getItem("wasapedro_datos_grupos")) || {}; 
         let fotosAmigos = JSON.parse(localStorage.getItem("wasapedro_fotos_amigos")) || {}; 
         let ordenChats = JSON.parse(localStorage.getItem("wasapedro_orden_chats")) || []; 
-        let temaActual = localStorage.getItem("wasapedro_theme_color") || "#00a884";
+        let gmailVinculado = localStorage.getItem("wasapedro_gmail_link") || "";
         
-        // Variables Admin
+        let notificacionesPendientes = {};
+        let temaActual = localStorage.getItem("wasapedro_theme_color") || "#00a884";
+
+        // Variables de Modos Administrativos
         let esAdmin = localStorage.getItem("wasapedro_is_admin") === "true";
         let reportesRecibidos = JSON.parse(localStorage.getItem("wasapedro_reportes")) || [];
-        const PASSWORD_ADMIN = "wasapedro123";
+        const CONTRASENA_ADMIN_MASTER = "wasapedro123";
 
-        // --- 2. INICIALIZACIÓN ---
+        const clienteValidacion = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
+        
+        clienteValidacion.on('connect', () => {
+            if (miNombre) { clienteValidacion.subscribe(`wasapedro/v3/verificar/${miNombre}`); }
+        });
+
+        clienteValidacion.on('message', (topico, mensaje) => {
+            try {
+                const data = JSON.parse(mensaje.toString());
+                if (topico === `wasapedro/v3/verificar/${miNombre}` && data.accion === "pregunta") {
+                    clienteValidacion.publish(`wasapedro/v3/verificar/${miNombre}`, JSON.stringify({ accion: "respuesta_ocupado", foto: miFotoB64 }));
+                }
+            } catch(e) {}
+        });
+
+        // --- MANEJO DE ESTADO INICIAL ---
         function inicializarUI() {
+            const pantallaRegistro = document.getElementById("pantalla-registro");
+            const interfazPrincipal = document.getElementById("interfaz-principal");
+
             if (miNombre) {
-                document.getElementById("pantalla-registro").classList.add("hidden");
-                document.getElementById("interfaz-principal").classList.remove("hidden");
-                document.getElementById("interfaz-principal").classList.add("flex");
+                pantallaRegistro.classList.add("hidden");
+                interfazPrincipal.classList.remove("hidden");
+                interfazPrincipal.classList.add("flex");
                 
                 document.getElementById("nombre-usuario-pantalla").textContent = miNombre;
                 document.getElementById("config-nombre-usuario").textContent = miNombre;
+                document.getElementById("input-cuenta-gmail").value = gmailVinculado;
                 
                 renderizarMisAvatars();
                 aplicarColorTema(temaActual);
                 conectarServidorCloud();
+                inicializarEventosArrastrarArchivos();
+            } else {
+                interfazPrincipal.classList.add("hidden");
+                pantallaRegistro.classList.remove("hidden");
             }
         }
+
         inicializarUI();
 
         function renderizarMisAvatars() {
+            const txtAvatar = document.getElementById("avatar-usuario-txt");
+            const imgAvatar = document.getElementById("avatar-usuario-img");
+            const configTxt = document.getElementById("preview-config-txt");
+            const configImg = document.getElementById("preview-config-avatar");
+
             if (miFotoB64) {
-                document.getElementById("avatar-usuario-txt").classList.add("hidden"); 
-                document.getElementById("avatar-usuario-img").src = miFotoB64; 
-                document.getElementById("avatar-usuario-img").classList.remove("hidden");
+                txtAvatar.classList.add("hidden"); 
+                configTxt.classList.add("hidden"); 
+                imgAvatar.src = miFotoB64; 
+                imgAvatar.classList.remove("hidden");
+                configImg.src = miFotoB64; 
+                configImg.classList.remove("hidden");
             } else {
-                document.getElementById("avatar-usuario-txt").textContent = miNombre.charAt(0).toUpperCase(); 
-                document.getElementById("avatar-usuario-txt").classList.remove("hidden");
+                imgAvatar.classList.add("hidden"); 
+                configImg.classList.add("hidden"); 
+                txtAvatar.textContent = miNombre.charAt(0).toUpperCase(); 
+                txtAvatar.classList.remove("hidden");
+                txtAvatar.classList.add("flex");
+                configTxt.textContent = miNombre.charAt(0).toUpperCase(); 
+                configTxt.classList.remove("hidden");
+                configTxt.classList.add("flex");
             }
         }
 
-        function aplicarColorTema(color) {
-            temaActual = color;
-            localStorage.setItem("wasapedro_theme_color", color);
-            document.querySelectorAll(".theme-bg").forEach(el => el.style.backgroundColor = color);
-            document.querySelectorAll(".theme-text").forEach(el => el.style.color = color);
+        // --- RECORTE (CROPPIE) ---
+        function iniciarProcesoRecorte(archivo) {
+            if (!archivo) return;
+            if (!archivo.type.match('image.*')) return alert("Imagen no válida.");
+            document.getElementById("modal-crop").classList.remove("hidden");
+            if (instanciaCroppie) instanciaCroppie.destroy();
+            instanciaCroppie = new Croppie(document.getElementById("contenedor-croppie"), {
+                viewport: { width: 180, height: 180, type: 'circle' },
+                boundary: { width: 280, height: 280 },
+                showZoomer: true
+            });
+            const lector = new FileReader();
+            lector.onload = function(e) { instanciaCroppie.bind({ url: e.target.result }); };
+            lector.readAsDataURL(archivo);
         }
-        function cambiarTema(color) { aplicarColorTema(color); }
+        function cancelarRecorte() {
+            if (instanciaCroppie) instanciaCroppie.destroy();
+            document.getElementById("modal-crop").classList.add("hidden");
+        }
+        function finalizarRecorte() {
+            if (!instanciaCroppie) return;
+            instanciaCroppie.result({ type: 'canvas', size: { width: 200, height: 200 }, format: 'jpeg' }).then(function(base64Recortada) {
+                miFotoB64 = base64Recortada;
+                localStorage.setItem("wasapedro_my_avatar", miFotoB64);
+                renderizarMisAvatars();
+                cancelarRecorte();
+                if(chatActivo) abrirChat(chatActivo); 
+            });
+        }
 
-        // --- 3. REGISTRO (Simple) ---
+        // --- CONTROL DE REGISTRO ---
         document.getElementById("btn-guardar").addEventListener("click", () => {
-            const nom = document.getElementById("input-nombre").value.trim().toLowerCase();
-            if (nom.length < 2) return alert("Nombre muy corto.");
-            miNombre = nom;
-            localStorage.setItem("wasapedro_mqtt_name", miNombre);
-            location.reload();
+            const nombreIngresado = document.getElementById("input-nombre").value.trim().toLowerCase();
+            const emailRecuperar = document.getElementById("input-recuperar-email").value.trim().toLowerCase();
+            const btn = document.getElementById("btn-guardar");
+            const txtError = document.getElementById("error-registro");
+
+            if (nombreIngresado.length < 2) return alert("Nombre muy corto.");
+            btn.disabled = true;
+            txtError.classList.add("hidden");
+            verificarNombreLibreYRegistrar(nombreIngresado, emailRecuperar, btn, txtError);
         });
 
-        // --- 4. CONEXIÓN MQTT Y LÓGICA DE MENSAJES ---
+        function verificarNombreLibreYRegistrar(nombre, email, btn, txtError) {
+            let nombreOcupado = false;
+            const subCanal = `wasapedro/v3/verificar/${nombre}`;
+            clienteValidacion.subscribe(subCanal);
+
+            const manejarVerificacion = (topico, mensaje) => {
+                try {
+                    const data = JSON.parse(mensaje.toString());
+                    if (topico === subCanal && data.accion === "respuesta_ocupado") nombreOcupado = true;
+                } catch(e){}
+            };
+            clienteValidacion.on('message', manejarVerificacion);
+            clienteValidacion.publish(subCanal, JSON.stringify({ accion: "pregunta" }));
+
+            setTimeout(() => {
+                clienteValidacion.unsubscribe(subCanal);
+                if (nombreOcupado) {
+                    btn.disabled = false;
+                    txtError.classList.remove("hidden");
+                } else {
+                    miNombre = nombre;
+                    localStorage.setItem("wasapedro_mqtt_name", miNombre);
+                    if (email) localStorage.setItem("wasapedro_gmail_link", email);
+                    location.reload();
+                }
+            }, 1200);
+        }
+
+        // --- SISTEMA DE GRUPOS ---
+        function abrirModalGrupo() { document.getElementById("modal-grupo").classList.remove("hidden"); }
+        function cerrarModalGrupo() { document.getElementById("modal-grupo").classList.add("hidden"); }
+        function procesarCrearGrupo() {
+            const nom = document.getElementById("input-nombre-grupo").value.trim();
+            if (!nom) return alert("Asigna un nombre al grupo.");
+            const idGrupo = "grupo_" + Date.now();
+            datosGrupos[idGrupo] = { nombre: nom, creador: miNombre, esGrupo: true };
+            localStorage.setItem("wasapedro_datos_grupos", JSON.stringify(datosGrupos));
+            if(!listaAmigosActivos.includes(idGrupo)) listaAmigosActivos.push(idGrupo);
+            localStorage.setItem("wasapedro_amigos_list", JSON.stringify(listaAmigosActivos));
+            clienteMqtt.subscribe(`wasapedro/v3/grupo/${idGrupo}`);
+            moverChatAlPrincipio(idGrupo);
+            cerrarModalGrupo();
+            abrirChat(idGrupo);
+        }
+
+        // --- CONEXIÓN MQTT Y CHATS ---
         function conectarServidorCloud() {
-            clienteMqtt = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', { clientId: "wasapedro_v4_" + miNombre + "_" + Date.now() });
+            clienteMqtt = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', { clientId: "wp_cl_" + miNombre + "_" + Date.now() });
 
             clienteMqtt.on('connect', () => {
-                // Suscripciones base
                 clienteMqtt.subscribe(`wasapedro/v3/chat/${miNombre}`);
-                Object.keys(datosGrupos).forEach(id => clienteMqtt.subscribe(`wasapedro/v3/grupo/${id}`));
+                clienteMqtt.subscribe(`wasapedro/v3/sistema/bans`); 
                 
-                // Suscripciones Admin y Moderación
-                clienteMqtt.subscribe(`wasapedro/v3/sistema/bans`);
+                Object.keys(datosGrupos).forEach(id => clienteMqtt.subscribe(`wasapedro/v3/grupo/${id}`));
                 if (esAdmin) { clienteMqtt.subscribe(`wasapedro/v3/sistema/reportes`); }
 
                 actualizarListaAmigosUI();
@@ -278,32 +449,33 @@
                 try {
                     const data = JSON.parse(mensaje.toString());
 
-                    // A. Sistema de Baneos
+                    // ESCUCHAR EXPULSIONES (BANEOS) GLOBALMENTE
                     if (topico === `wasapedro/v3/sistema/bans`) {
-                        if (data.baneado === miNombre) {
-                            alert(`🚨 HAS SIDO EXPULSADO DE WASAPEDRO.\nMotivo: ${data.motivo}`);
-                            localStorage.clear();
-                            location.reload();
+                        if (data.usuarioBaneado === miNombre) {
+                            alert(`🚨 Has sido baneado permanentemente de WasaPedro.\nMotivo: ${data.motivo}`);
+                            cerrarSesionLimpiar();
                         }
                         return;
                     }
 
-                    // B. Sistema de Reportes (Solo Admin)
+                    // ESCUCHAR ENTRADA DE REPORTES (SOLO ADMINS)
                     if (topico === `wasapedro/v3/sistema/reportes` && esAdmin) {
-                        reportesRecibidos.push(data);
-                        localStorage.setItem("wasapedro_reportes", JSON.stringify(reportesRecibidos));
-                        if (!document.getElementById("modal-admin-panel").classList.contains("hidden")) renderizarReportesAdmin();
+                        if (!reportesRecibidos.some(r => r.id === data.id)) {
+                            reportesRecibidos.push(data);
+                            localStorage.setItem("wasapedro_reportes", JSON.stringify(reportesRecibidos));
+                            if(!document.getElementById("modal-admin-panel").classList.contains("hidden")) renderizarReportesAdmin();
+                        }
                         return;
                     }
 
-                    // C. Mensajes de Chat normales
                     if (!data.emisor || data.emisor === miNombre) return;
+                    if (listaBloqueados.includes(data.emisor)) return;
 
                     let esGrupo = topico.includes("/grupo/");
                     let idChat = esGrupo ? topico.split("/").pop() : data.emisor;
 
                     if (esGrupo && !datosGrupos[idChat]) {
-                        datosGrupos[idChat] = { nombre: data.nombreGrupo || "Grupo", esGrupo: true };
+                        datosGrupos[idChat] = { nombre: data.nombreGrupo || "Grupo de MQTT", esGrupo: true };
                         localStorage.setItem("wasapedro_datos_grupos", JSON.stringify(datosGrupos));
                     }
 
@@ -312,52 +484,46 @@
                         localStorage.setItem("wasapedro_fotos_amigos", JSON.stringify(fotosAmigos));
                     }
 
-                    if (data.texto) {
-                        if (!historialesDeChats[idChat]) historialesDeChats[idChat] = [];
-                        historialesDeChats[idChat].push(data);
-                        localStorage.setItem("wasapedro_historiales", JSON.stringify(historialesDeChats));
+                    if (!historialesDeChats[idChat]) historialesDeChats[idChat] = [];
+                    historialesDeChats[idChat].push(data);
+                    localStorage.setItem("wasapedro_historiales", JSON.stringify(historialesDeChats));
 
-                        moverChatAlPrincipio(idChat);
+                    moverChatAlPrincipio(idChat);
 
-                        if (chatActivo === idChat) {
-                            renderizarMensajes();
-                        } else {
-                            actualizarListaAmigosUI(); // Actualiza orden
-                        }
+                    if (chatActivo === idChat) {
+                        renderizarMensajes();
+                    } else {
+                        notificacionesPendientes[idChat] = (notificacionesPendientes[idChat] || 0) + 1;
+                        actualizarBuzonNotificacionesUI();
                     }
-                } catch(e) {}
+                } catch(e){}
             });
         }
 
-        // --- 5. FUNCIONES DE CHAT ---
         function buscarAmigo() {
             const nom = document.getElementById("input-buscar").value.trim().toLowerCase();
-            if (!nom) return;
-            if (nom === miNombre) return alert("No puedes chatear contigo mismo.");
-            
+            if (!nom || nom === miNombre) return;
             if (!listaAmigosActivos.includes(nom)) {
                 listaAmigosActivos.push(nom);
                 localStorage.setItem("wasapedro_amigos_list", JSON.stringify(listaAmigosActivos));
-                moverChatAlPrincipio(nom);
             }
             document.getElementById("input-buscar").value = "";
+            moverChatAlPrincipio(nom);
             abrirChat(nom);
         }
 
-        function abrirChat(idChat) {
-            chatActivo = idChat;
+        function abrirChat(id) {
+            chatActivo = id;
+            delete notificacionesPendientes[id];
+            actualizarBuzonNotificacionesUI();
+
             document.getElementById("pantalla-chat-vacia").classList.add("hidden");
             document.getElementById("pantalla-chat-activa").classList.remove("hidden");
             document.getElementById("pantalla-chat-activa").classList.add("flex");
 
-            // Configurar Cabecera
-            const esGrupo = datosGrupos[idChat];
-            document.getElementById("nombre-chat-amigo").textContent = esGrupo ? datosGrupos[idChat].nombre : idChat;
-            
-            // Ocultar/Mostrar botón de reportar (solo para DM, no grupos)
-            const btnReporte = document.getElementById("btn-abrir-reporte");
-            if (esGrupo) btnReporte.classList.add("hidden");
-            else btnReporte.classList.remove("hidden");
+            const esGrupo = datosGrupos[id];
+            document.getElementById("nombre-chat-amigo").textContent = esGrupo ? datosGrupos[id].nombre : id;
+            document.getElementById("btn-abrir-reporte").classList.remove("hidden"); // Mostrar botón de denuncia
 
             renderizarMensajes();
         }
@@ -393,23 +559,26 @@
         function renderizarMensajes() {
             const contenedor = document.getElementById("contenedor-mensajes");
             contenedor.innerHTML = "";
-            const mensajes = historialesDeChats[chatActivo] || [];
+            const lista = historialesDeChats[chatActivo] || [];
 
-            mensajes.forEach(msg => {
-                const soyYo = msg.emisor === miNombre;
-                const div = document.createElement("div");
-                div.className = `flex flex-col max-w-[75%] ${soyYo ? 'self-end items-end ml-auto' : 'self-start items-start mr-auto'} mb-3`;
+            lista.forEach(m => {
+                const soyYo = m.emisor === miNombre;
+                const d = document.createElement("div");
+                d.className = `flex flex-col max-w-[75%] ${soyYo ? 'ml-auto items-end' : 'mr-auto items-start'} mb-2`;
                 
-                let html = "";
-                if (!soyYo && datosGrupos[chatActivo]) {
-                    html += `<span class="text-[10px] text-${temaActual} font-bold ml-1 mb-1">~ ${msg.emisor}</span>`;
+                let cuerpo = "";
+                if(!soyYo && datosGrupos[chatActivo]) cuerpo += `<span class="text-[10px] text-gray-400 font-bold mb-0.5">~${m.emisor}</span>`;
+                
+                cuerpo += `<div class="p-3 rounded-xl text-sm ${soyYo ? 'bg-[#00a884] text-black font-medium' : 'bg-[#202d33] text-gray-100'}">`;
+                if(m.archivoB64) {
+                    if(m.tipoArchivo?.startsWith("image/")) cuerpo += `<img src="${m.archivoB64}" class="max-w-xs rounded mb-1 cursor-pointer">`;
+                    else cuerpo += `<a href="${m.archivoB64}" download="${m.nombreArchivo}" class="underline text-blue-400 block">${m.nombreArchivo || 'Descargar archivo'}</a>`;
                 }
+                if(m.texto) cuerpo += `<p class="break-all">${m.texto}</p>`;
+                cuerpo += `</div>`;
                 
-                html += `<div class="p-3 rounded-xl text-sm shadow-md ${soyYo ? `bg-[${temaActual}] text-[#111b21]` : 'bg-[#202d33] text-gray-200'}">
-                            ${msg.texto}
-                         </div>`;
-                div.innerHTML = html;
-                contenedor.appendChild(div);
+                d.innerHTML = cuerpo;
+                contenedor.appendChild(d);
             });
             contenedor.scrollTop = contenedor.scrollHeight;
         }
@@ -418,19 +587,23 @@
             const contenedor = document.getElementById("contenedor-lista-dinamica");
             contenedor.innerHTML = "";
             
-            ordenChats.forEach(idChat => {
-                const esGrupo = datosGrupos[idChat];
-                const nombre = esGrupo ? datosGrupos[idChat].nombre : idChat;
-                
+            // Unir arreglos asegurando IDs únicos
+            let unificados = [...new Set([...ordenChats, ...listaAmigosActivos])];
+            ordenChats = unificados;
+            localStorage.setItem("wasapedro_orden_chats", JSON.stringify(ordenChats));
+
+            ordenChats.forEach(id => {
+                const esGrupo = datosGrupos[id];
+                const nombre = esGrupo ? datosGrupos[id].nombre : id;
                 const div = document.createElement("div");
-                div.className = "p-3 bg-[#182229] hover:bg-[#202d33] rounded-lg cursor-pointer flex items-center gap-3 border border-[#222e35] transition";
-                div.onclick = () => abrirChat(idChat);
+                div.className = `p-3 flex items-center gap-3 rounded-xl cursor-pointer hover:bg-[#202d33] border border-transparent transition ${chatActivo === id ? 'bg-[#202d33]' : 'bg-[#111b21]'}`;
+                div.onclick = () => abrirChat(id);
                 div.innerHTML = `
-                    <div class="w-10 h-10 bg-[#2a3942] rounded-full flex items-center justify-center font-bold text-gray-300">
-                        ${esGrupo ? '<i class="ph ph-users"></i>' : nombre.charAt(0).toUpperCase()}
+                    <div class="w-10 h-10 bg-[#2a3942] rounded-full flex items-center justify-center font-bold text-sm">
+                        ${esGrupo ? '<i class="ph ph-users-three text-lg"></i>' : nombre.charAt(0).toUpperCase()}
                     </div>
-                    <div class="flex-1 overflow-hidden">
-                        <span class="text-sm font-bold text-gray-200 truncate block">${nombre}</span>
+                    <div class="flex-1 min-w-0">
+                        <span class="text-sm font-bold text-gray-200 block truncate">${nombre}</span>
                     </div>
                 `;
                 contenedor.appendChild(div);
@@ -444,34 +617,96 @@
             actualizarListaAmigosUI();
         }
 
-        // --- 6. GRUPOS ---
-        function abrirModalGrupo() { document.getElementById("modal-grupo").classList.remove("hidden"); }
-        function cerrarModalGrupo() { document.getElementById("modal-grupo").classList.add("hidden"); }
-        function procesarCrearGrupo() {
-            const nom = document.getElementById("input-nombre-grupo").value.trim();
-            if (!nom) return alert("Asigna un nombre al grupo.");
-            const idGrupo = "grupo_" + Date.now();
-            
-            datosGrupos[idGrupo] = { nombre: nom, creador: miNombre, esGrupo: true };
-            localStorage.setItem("wasapedro_datos_grupos", JSON.stringify(datosGrupos));
-            
-            if (!listaAmigosActivos.includes(idGrupo)) listaAmigosActivos.push(idGrupo);
-            localStorage.setItem("wasapedro_amigos_list", JSON.stringify(listaAmigosActivos));
-            
-            clienteMqtt.subscribe(`wasapedro/v3/grupo/${idGrupo}`);
-            moverChatAlPrincipio(idGrupo);
-            cerrarModalGrupo();
-            abrirChat(idGrupo);
-            alert(`¡Grupo Creado! ID para compartir: ${idGrupo}`);
+        function actualizarBuzonNotificacionesUI() {
+            const cont = document.getElementById("lista-notificaciones");
+            cont.innerHTML = "";
+            let llaves = Object.keys(notificacionesPendientes);
+            if(llaves.length === 0) {
+                cont.innerHTML = `<p class="italic text-gray-500">Sin mensajes nuevos.</p>`;
+                return;
+            }
+            llaves.forEach(k => {
+                let p = document.createElement("p");
+                p.className = "bg-[#2a3942] p-1 px-2 rounded flex justify-between cursor-pointer text-yellow-500 font-bold";
+                p.onclick = () => abrirChat(k);
+                p.innerHTML = `<span>@${k}</span> <span>(${notificacionesPendientes[k]})</span>`;
+                cont.appendChild(p);
+            });
         }
 
+        function cambiarTema(c) {
+            temaActual = c;
+            localStorage.setItem("wasapedro_theme_color", c);
+            aplicarColorTema(c);
+        }
+        function aplicarColorTema(c) {
+            document.querySelectorAll(".theme-bg").forEach(el => el.style.backgroundColor = c);
+            document.querySelectorAll(".theme-text").forEach(el => el.style.color = c);
+        }
+        function guardarCorreoVinculado() {
+            gmailVinculado = document.getElementById("input-cuenta-gmail").value.trim().toLowerCase();
+            localStorage.setItem("wasapedro_gmail_link", gmailVinculado);
+            alert("Correo guardado.");
+        }
+        function subirCopiaNube() {
+            if(!gmailVinculado) return alert("Primero vincula un correo.");
+            let paquete = {
+                amigos: listaAmigosActivos, historiales: historialesDeChats, apodos: apodosContactos,
+                bloqueados: listaBloqueados, datosGrupos: datosGrupos, fotosAmigos: fotosAmigos,
+                ordenChats: ordenChats, miFoto: miFotoB64, tema: temaActual
+            };
+            clienteMqtt.publish(`wasapedro/v3/backup/${btoa(gmailVinculado)}`, JSON.stringify({
+                usuario: miNombre, payload: JSON.stringify(paquete)
+            }), { retain: true });
+            document.getElementById("status-cloud").textContent = "Copia guardada en Nube ✓";
+        }
         function cerrarSesionLimpiar() {
             localStorage.clear();
             location.reload();
         }
 
-        // --- 7. SISTEMA DE ADMINISTRACIÓN Y DENUNCIAS ---
+        // --- SISTEMA COMPARTIR ARCHIVOS DRAG & DROP ---
+        function inicializarEventosArrastrarArchivos() {
+            const zona = document.getElementById("pantalla-chat-activa");
+            const visual = document.getElementById("zona-drop-visual");
+            window.addEventListener("dragover", e => e.preventDefault());
+            window.addEventListener("drop", e => e.preventDefault());
+            zona.addEventListener("dragenter", () => visual.style.opacity = "1");
+            visual.addEventListener("dragleave", () => visual.style.opacity = "0");
+            zona.addEventListener("drop", (e) => {
+                visual.style.opacity = "0";
+                let f = e.dataTransfer.files[0];
+                if(f) procesarArchivoAdjunto(f);
+            });
+        }
+
+        function procesarArchivoAdjunto(archivo) {
+            if(!archivo || !chatActivo) return;
+            if(archivo.size > 2000000) return alert("Máximo permitido: 2MB.");
+            let lector = new FileReader();
+            lector.onload = function(e) {
+                const payload = {
+                    emisor: miNombre, texto: "", archivoB64: e.target.result,
+                    tipoArchivo: archivo.type, nombreArchivo: archivo.name, timestamp: Date.now()
+                };
+                if(datosGrupos[chatActivo]) payload.nombreGrupo = datosGrupos[chatActivo].nombre;
+                
+                if (!historialesDeChats[chatActivo]) historialesDeChats[chatActivo] = [];
+                historialesDeChats[chatActivo].push(payload);
+                localStorage.setItem("wasapedro_historiales", JSON.stringify(historialesDeChats));
+
+                let topico = datosGrupos[chatActivo] ? `wasapedro/v3/grupo/${chatActivo}` : `wasapedro/v3/chat/${chatActivo}`;
+                clienteMqtt.publish(topico, JSON.stringify(payload));
+                renderizarMensajes();
+            };
+            lector.readAsDataURL(archivo);
+        }
+
+        // --- 🛡️ NUEVAS FUNCIONES DE ADMINISTRACIÓN Y REPORTES ---
+
+        // Abrir ventana para rellenar la denuncia
         function abrirModalReporte() {
+            if(!chatActivo) return;
             document.getElementById("nombre-reportado-txt").textContent = chatActivo;
             document.getElementById("input-motivo-reporte").value = "";
             document.getElementById("modal-reporte").classList.remove("hidden");
@@ -481,98 +716,114 @@
             document.getElementById("modal-reporte").classList.add("hidden");
         }
 
+        // El reporte se emite vía MQTT al canal general del staff administrativo
         function enviarReporte() {
             const motivo = document.getElementById("input-motivo-reporte").value.trim();
-            if (motivo.length < 5) return alert("Por favor, explica el motivo detalladamente.");
-            
+            if (motivo.length < 5) return alert("Por favor, rellena el cuadro explicando el porqué.");
+
             const reporte = {
-                id: "rep_" + Date.now(),
+                id: "rep_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
                 denunciante: miNombre,
                 denunciado: chatActivo,
                 motivo: motivo,
                 fecha: new Date().toLocaleString()
             };
-            
+
             clienteMqtt.publish(`wasapedro/v3/sistema/reportes`, JSON.stringify(reporte));
-            alert("Denuncia enviada. Los administradores revisarán el caso.");
+            alert("La denuncia ha sido enviada con éxito. El equipo administrativo revisará el caso.");
             cerrarModalReporte();
         }
 
+        // Abrir el recuadro rectangular de verificación de contraseña
+        function abrirModalAdminLogin() {
+            document.getElementById("input-admin-pass").value = "";
+            document.getElementById("modal-admin-login").classList.remove("hidden");
+        }
+
+        // Validación de privilegios
         function verificarAdmin() {
-            const pass = document.getElementById("input-admin-pass").value;
-            if (pass === PASSWORD_ADMIN) {
+            const contra = document.getElementById("input-admin-pass").value;
+            if (contra === CONTRASENA_ADMIN_MASTER) {
                 esAdmin = true;
                 localStorage.setItem("wasapedro_is_admin", "true");
-                if(clienteMqtt) clienteMqtt.subscribe(`wasapedro/v3/sistema/reportes`);
-                
+                clienteMqtt.subscribe(`wasapedro/v3/sistema/reportes`); // Suscribirse a denuncias en vivo
+
                 document.getElementById("modal-admin-login").classList.add("hidden");
                 document.getElementById("modal-config").classList.add("hidden");
                 document.getElementById("modal-admin-panel").classList.remove("hidden");
                 renderizarReportesAdmin();
             } else {
-                alert("Contraseña incorrecta.");
+                alert("Contraseña de seguridad incorrecta.");
             }
-            document.getElementById("input-admin-pass").value = "";
         }
 
-        function cerrarPanelAdmin() {
-            document.getElementById("modal-admin-panel").classList.add("hidden");
-        }
-
+        // Renderizar denuncias en el Panel de Administración
         function renderizarReportesAdmin() {
             const contenedor = document.getElementById("lista-denuncias-admin");
             contenedor.innerHTML = "";
-            
+
             if (reportesRecibidos.length === 0) {
-                contenedor.innerHTML = `<p class="text-sm text-gray-500 italic text-center mt-10">No hay denuncias pendientes.</p>`;
+                contenedor.innerHTML = `<p class="text-sm text-gray-500 italic text-center mt-10">No hay ninguna denuncia registrada por el momento.</p>`;
                 return;
             }
-            
+
             [...reportesRecibidos].reverse().forEach(rep => {
                 const div = document.createElement("div");
-                div.className = "bg-[#182229] p-4 rounded-xl border border-[#222e35]";
+                div.className = "bg-[#182229] p-4 rounded-xl border border-[#222e35] space-y-2";
                 div.innerHTML = `
-                    <div class="mb-2">
-                        <span class="text-xs text-red-400 font-bold">Reporte vs: @${rep.denunciado}</span><br>
-                        <span class="text-[10px] text-gray-500">Por @${rep.denunciante} - ${rep.fecha}</span>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-red-400 font-bold">Objetivo: @${rep.denunciado}</span>
+                        <span class="text-[10px] text-gray-400">${rep.fecha}</span>
                     </div>
-                    <p class="text-sm text-white bg-[#111b21] p-3 rounded-lg mb-3">"${rep.motivo}"</p>
-                    <div class="flex gap-2">
-                        <button onclick="responderReporte('${rep.denunciante}', '${rep.id}')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 rounded">Avisar</button>
-                        <button onclick="ejecutarBaneo('${rep.denunciado}')" class="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2 rounded">Banear</button>
-                        <button onclick="eliminarReporteLocal('${rep.id}')" class="bg-[#2a3942] hover:bg-[#374c56] text-white px-3 rounded"><i class="ph ph-trash"></i></button>
+                    <div class="text-xs text-gray-300">Enviado por: <span class="text-white font-semibold">@${rep.denunciante}</span></div>
+                    <p class="text-sm bg-[#111b21] p-3 rounded-lg text-gray-200 italic">"${rep.motivo}"</p>
+                    <div class="flex gap-2 pt-1">
+                        <button onclick="responderReporte('${rep.denunciante}', '${rep.id}')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2 rounded-lg">Responder</button>
+                        <button onclick="ejecutarBaneo('${rep.denunciado}')" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold text-xs py-2 rounded-lg">Banear</button>
+                        <button onclick="eliminarReporte('${rep.id}')" class="bg-[#2a3942] hover:bg-red-600 px-3 rounded-lg text-white text-xs transition"><i class="ph ph-trash"></i></button>
                     </div>
                 `;
                 contenedor.appendChild(div);
             });
         }
 
+        // Responder denuncias enviando un mensaje directo de soporte
         function responderReporte(denunciante, idReporte) {
-            const msj = prompt("Respuesta del Admin para @" + denunciante + ":");
-            if (msj) {
-                clienteMqtt.publish(`wasapedro/v3/chat/${denunciante}`, JSON.stringify({
-                    emisor: "SISTEMA_ADMIN", texto: "🛡️ " + msj, timestamp: Date.now()
-                }));
-                eliminarReporteLocal(idReporte);
+            const msgAdmin = prompt(`Escribe la respuesta/resolución oficial para @${denunciante}:`);
+            if (msgAdmin && msgAdmin.trim() !== "") {
+                const payloadRespuesta = {
+                    emisor: "SISTEMA_ADMIN",
+                    texto: "🛡️ [Soporte Admin]: " + msgAdmin.trim(),
+                    timestamp: Date.now()
+                };
+                clienteMqtt.publish(`wasapedro/v3/chat/${denunciante}`, JSON.stringify(payloadRespuesta));
+                alert("Respuesta enviada al usuario.");
+                eliminarReporte(idReporte);
             }
         }
 
-        function ejecutarBaneo(usuario) {
-            if (confirm(`¿Banear permanentemente a @${usuario}?`)) {
-                clienteMqtt.publish(`wasapedro/v3/sistema/bans`, JSON.stringify({
-                    baneado: usuario, motivo: "Incumplimiento de las normas."
-                }));
-                alert(`@${usuario} baneado.`);
+        // Banear usuarios enviando comando letal por MQTT
+        function ejecutarBaneo(usuarioTarget) {
+            if (usuarioTarget === miNombre) return alert("No puedes autosancionarte.");
+            const razon = prompt(`Introduce la razón del baneo permanente para @${usuarioTarget}:`);
+            if (razon && razon.trim() !== "") {
+                const payloadBan = {
+                    usuarioBaneado: usuarioTarget,
+                    motivo: razon.trim()
+                };
+                clienteMqtt.publish(`wasapedro/v3/sistema/bans`, JSON.stringify(payloadBan));
+                alert(`Comando de expulsión enviado para @${usuarioTarget}.`);
             }
         }
 
-        function eliminarReporteLocal(id) {
-            reportesRecibidos = reportesRecibidos.filter(r => r.id !== id);
+        // Eliminar denuncia de la interfaz local
+        function eliminarReporte(idReporte) {
+            reportesRecibidos = reportesRecibidos.filter(r => r.id !== idReporte);
             localStorage.setItem("wasapedro_reportes", JSON.stringify(reportesRecibidos));
             renderizarReportesAdmin();
         }
 
-        // Permite enviar mensajes con la tecla Enter
+        // Soporte de envío rápido pulsando la tecla Enter
         document.getElementById("input-mensaje")?.addEventListener("keypress", function(e) {
             if (e.key === "Enter") enviarMensajeTexto();
         });
