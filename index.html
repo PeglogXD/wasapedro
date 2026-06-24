@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WasaPedro Premium v4 + Control de Administración</title>
     <link rel="manifest" href="manifest.json"> 
-    <meta name="theme-color" id="meta-theme" content="#00a884">
+    <meta name="theme-color" id="meta-theme" content="#111b21">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -210,7 +210,7 @@
             </div>
             
             <div class="mb-6">
-                <label class="text-xs font-bold uppercase tracking-wider text-gray-400 block mb-3">Color de la interfaz</label>
+                <label class="text-xs font-bold uppercase tracking-wider text-gray-400 block mb-3">Color de la interfaz (Globos y Botones)</label>
                 <div class="grid grid-cols-4 gap-2">
                     <button onclick="cambiarTema('#00a884')" class="w-full h-10 bg-[#00a884] rounded-lg font-bold text-xs text-black flex items-center justify-center">Verde</button>
                     <button onclick="cambiarTema('#007acc')" class="w-full h-10 bg-[#007acc] rounded-lg font-bold text-xs text-white flex items-center justify-center">Azul</button>
@@ -543,6 +543,7 @@
             abrirChat(nom);
         }
 
+        // --- ABRIR CHAT ---
         function abrirChat(id) {
             chatActivo = id;
             delete notificacionesPendientes[id];
@@ -625,7 +626,7 @@
             renderizarMensajes();
         }
 
-        // --- RENDERIZAR MENSAJES (SOPORTE DE COLOR EN TIEMPO REAL) ---
+        // --- RENDERIZAR MENSAJES (REACTIVOS AL TEMA SELECCIONADO) ---
         function renderizarMensajes() {
             const contenedor = document.getElementById("contenedor-mensajes");
             contenedor.innerHTML = "";
@@ -644,7 +645,6 @@
                     cuerpo += `<span class="text-[10px] text-gray-400 font-bold mb-0.5">~${nombreEmisor}</span>`;
                 }
                 
-                // Los globos de tus propios mensajes cambian de color de forma totalmente reactiva
                 let estiloBubble = soyYo ? `style="background-color: ${temaActual}; color: ${colorTextoMsg};"` : '';
                 
                 cuerpo += `<div ${estiloBubble} class="p-3 rounded-xl text-sm ${soyYo ? 'font-medium shadow-sm' : 'bg-[#202d33] text-gray-100'}">`;
@@ -714,7 +714,7 @@
             });
         }
 
-        // --- SISTEMA MENÚ DE OPCIONES DEL CHAT ACTIVO ---
+        // --- OPCIONES CHAT ---
         function toggleMenuOpcionesChat() {
             const menu = document.getElementById("menu-opciones-chat");
             menu.classList.toggle("hidden");
@@ -796,7 +796,7 @@
             if (chatActivo === u) abrirChat(u);
         }
 
-        // --- CAMBIAR TEMA (REACTIVIDAD NATIVA) ---
+        // --- SISTEMA DE CAMBIO DE TEMAS ---
         function cambiarTema(c) {
             temaActual = c;
             localStorage.setItem("wasapedro_theme_color", c);
@@ -807,10 +807,9 @@
             document.querySelectorAll(".theme-bg").forEach(el => el.style.backgroundColor = c);
             document.querySelectorAll(".theme-text").forEach(el => el.style.color = c);
             
-            // Forzar actualización del metatag que controla el color de la barra nativa del sistema
-            document.getElementById("meta-theme")?.setAttribute("content", c);
+            // La barra nativa se mantiene de un color oscuro unificado para que no rompa la estética
+            document.getElementById("meta-theme")?.setAttribute("content", "#111b21");
             
-            // Volver a pintar los mensajes activos para aplicar el nuevo fondo en tiempo real
             if (chatActivo) {
                 renderizarMensajes();
             }
@@ -838,7 +837,7 @@
             location.reload();
         }
 
-        // --- SISTEMA COMPARTIR ARCHIVOS DRAG & DROP ---
+        // --- ACCIONES ARRASTRAR ARCHIVOS ---
         function inicializarEventosArrastrarArchivos() {
             const zona = document.getElementById("pantalla-chat-activa");
             const visual = document.getElementById("zona-drop-visual");
@@ -875,7 +874,7 @@
             lector.readAsDataURL(archivo);
         }
 
-        // --- FUNCIONES DE ADMINISTRACIÓN Y REPORTES ---
+        // --- ADMINISTRACIÓN Y MODERACIÓN ---
         function abrirModalReporte() {
             if(!chatActivo) return;
             document.getElementById("menu-opciones-chat").classList.add("hidden");
@@ -992,7 +991,6 @@
             if (e.key === "Enter") enviarMensajeTexto();
         });
 
-        // Lanzamiento inicial del estado de la aplicación
         inicializarUI();
     </script>
 </body>
