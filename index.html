@@ -14,7 +14,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
     
     <style>
-        /* Estilos personalizados para el slider de Croppie */
         .cr-slider-path { background: #2a3942 !important; height: 6px !important; }
         .cr-slider-handle { background: #00a884 !important; border: none !important; width: 16px !important; height: 16px !important; top: -5px !important; }
         .cr-boundary { border-radius: 12px !important; overflow: hidden !important; }
@@ -25,6 +24,7 @@
 </head>
 <body class="h-screen w-screen flex flex-col items-center justify-center p-4 bg-[#0b141a] text-[#e9edef] font-sans overflow-hidden select-none">
 
+    <!-- 1. PANTALLA DE REGISTRO -->
     <div id="pantalla-registro" class="bg-[#111b21] p-8 rounded-2xl shadow-2xl border border-[#222e35] max-w-sm w-full text-center hidden">
         <h1 class="text-3xl font-extrabold text-[#00a884] mb-2 theme-text">WasaPedro</h1>
         <p class="text-gray-400 text-sm mb-6">Ingresa tu usuario para iniciar sesión.</p>
@@ -40,8 +40,10 @@
         <button id="btn-guardar" class="w-full bg-[#00a884] theme-bg hover:opacity-90 text-[#111b21] font-bold p-3 rounded-lg transition disabled:opacity-50">Ingresar / Restaurar</button>
     </div>
 
+    <!-- 2. INTERFAZ PRINCIPAL -->
     <div id="interfaz-principal" class="w-full max-w-4xl h-[85vh] bg-[#111b21] rounded-2xl shadow-2xl border border-[#222e35] overflow-hidden hidden">
         
+        <!-- SIDEBAR IZQUIERDO -->
         <div class="w-1/3 border-r border-[#222e35] flex flex-col bg-[#111b21]">
             <div class="p-4 bg-[#202d33] flex justify-between items-center">
                 <div class="flex items-center gap-3 min-w-0">
@@ -79,6 +81,7 @@
             </div>
         </div>
 
+        <!-- VENTANA DE CHAT VACÍA -->
         <div class="flex-1 flex flex-col bg-[#222e35] bg-opacity-20" id="pantalla-chat-vacia">
             <div class="m-auto text-center max-w-sm">
                 <h3 class="text-xl font-semibold text-gray-300">WasaPedro Pro Plus</h3>
@@ -86,6 +89,7 @@
             </div>
         </div>
 
+        <!-- VENTANA DE CHAT ACTIVA -->
         <div class="flex-1 flex flex-col bg-[#0b141a] relative hidden" id="pantalla-chat-activa">
             <div id="zona-drop-visual" class="absolute inset-0 bg-[#00a884]/20 border-4 border-dashed border-[#00a884] z-50 flex flex-col items-center justify-center backdrop-blur-sm pointer-events-none transition-all duration-200 opacity-0">
                 <i class="ph ph-cloud-arrow-up text-6xl text-white mb-2 animate-bounce"></i>
@@ -101,9 +105,20 @@
                         <span id="sub-chat-info" class="text-[10px] text-gray-400 block hidden"></span>
                     </div>
                 </div>
-                <button onclick="abrirModalReporte()" id="btn-abrir-reporte" class="text-red-500 hover:bg-red-500/10 p-2 rounded-full transition hidden" title="Denunciar Usuario/Grupo">
-                    <i class="ph ph-warning-octagon text-2xl"></i>
-                </button>
+                
+                <!-- MENÚ DE OPCIONES DESPLEGABLE RESTAURADO -->
+                <div class="relative">
+                    <button onclick="toggleMenuOpcionesChat()" class="text-xl text-gray-400 hover:text-white p-2 rounded-full transition" title="Opciones de chat">
+                        <i class="ph ph-dots-three-vertical text-2xl"></i>
+                    </button>
+                    <div id="menu-opciones-chat" class="absolute right-0 mt-2 w-48 bg-[#202d33] border border-[#222e35] rounded-xl shadow-xl hidden z-50 py-1 text-sm">
+                        <button onclick="menuPonerApodo()" class="w-full text-left px-4 py-2 hover:bg-[#2a3942] text-gray-200 flex items-center gap-2"><i class="ph ph-pencil"></i> Poner Apodo</button>
+                        <button onclick="menuBorrarChat()" class="w-full text-left px-4 py-2 hover:bg-[#2a3942] text-gray-200 flex items-center gap-2"><i class="ph ph-trash"></i> Borrar Chat</button>
+                        <button id="btn-menu-bloquear" onclick="menuBloquearContacto()" class="w-full text-left px-4 py-2 hover:bg-[#2a3942] text-gray-200 flex items-center gap-2"><i class="ph ph-prohibit"></i> Bloquear</button>
+                        <hr class="border-[#222e35] my-1">
+                        <button onclick="abrirModalReporte()" class="w-full text-left px-4 py-2 hover:bg-red-600/20 text-red-400 flex items-center gap-2"><i class="ph ph-warning-octagon"></i> Denunciar</button>
+                    </div>
+                </div>
             </div>
             
             <div class="flex-1 overflow-y-auto p-4 space-y-3" id="contenedor-mensajes"></div>
@@ -120,6 +135,7 @@
 
     </div>
 
+    <!-- MODAL GRUPO -->
     <div id="modal-grupo" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-sm rounded-2xl p-6 shadow-2xl">
             <h2 class="text-lg font-bold text-white mb-3 flex items-center gap-2"><i class="ph ph-users-three text-[#00a884] theme-text"></i> Crear Nuevo Grupo</h2>
@@ -132,6 +148,7 @@
         </div>
     </div>
 
+    <!-- MODAL CROPPIE -->
     <div id="modal-crop" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-[60]">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-sm rounded-2xl p-5 shadow-2xl flex flex-col">
             <h2 class="text-sm font-bold text-white mb-4 text-center">Ajusta tu foto de perfil</h2>
@@ -145,6 +162,7 @@
         </div>
     </div>
 
+    <!-- MODAL CONFIGURACIÓN -->
     <div id="modal-config" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-md rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
@@ -152,6 +170,7 @@
                 <button onclick="document.getElementById('modal-config').classList.add('hidden')" class="text-gray-400 hover:text-white text-lg"><i class="ph ph-x"></i></button>
             </div>
 
+            <!-- SECCIÓN CUENTA -->
             <div class="mb-6 p-4 bg-[#182229] border border-[#222e35] rounded-xl">
                 <label class="text-xs font-bold uppercase tracking-wider text-[#00a884] theme-text block mb-3 flex items-center gap-1">
                     <i class="ph ph-user-circle-gear text-base"></i> Cuenta y Foto de Perfil
@@ -213,6 +232,7 @@
         </div>
     </div>
 
+    <!-- MODAL DE DENUNCIAS -->
     <div id="modal-reporte" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-[70]">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-sm rounded-2xl p-6 shadow-2xl">
             <h2 class="text-lg font-bold text-red-500 mb-2 flex items-center gap-2">
@@ -227,6 +247,7 @@
         </div>
     </div>
 
+    <!-- MODAL CONTRASEÑA ADMIN -->
     <div id="modal-admin-login" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-[70]">
         <div class="bg-[#111b21] border-2 border-yellow-600 w-full max-w-xs rounded-xl p-6 shadow-2xl text-center">
             <i class="ph ph-shield-star text-4xl text-yellow-500 mb-2"></i>
@@ -239,6 +260,7 @@
         </div>
     </div>
 
+    <!-- PANEL COMPLETO DE CONTROL ADMIN -->
     <div id="modal-admin-panel" class="fixed inset-0 bg-black/90 flex items-center justify-center p-4 hidden z-[80]">
         <div class="bg-[#111b21] border border-yellow-600 w-full max-w-2xl h-[80vh] rounded-2xl p-6 shadow-2xl flex flex-col">
             <div class="flex justify-between items-center mb-4 border-b border-[#222e35] pb-4">
@@ -250,7 +272,6 @@
             </div>
         </div>
     </div>
-
 
     <script>
         // --- INICIALIZACIÓN DE VARIABLES DESDE MEMORIA LOCAL ---
@@ -272,7 +293,6 @@
         let notificacionesPendientes = {};
         let temaActual = localStorage.getItem("wasapedro_theme_color") || "#00a884";
 
-        // Variables de Modos Administrativos
         let esAdmin = localStorage.getItem("wasapedro_is_admin") === "true";
         let reportesRecibidos = JSON.parse(localStorage.getItem("wasapedro_reportes")) || [];
         const CONTRASENA_ADMIN_MASTER = "wasapedro123";
@@ -307,6 +327,7 @@
                 document.getElementById("input-cuenta-gmail").value = gmailVinculado;
                 
                 renderizarMisAvatars();
+                actualizarListaBloqueadosUI();
                 aplicarColorTema(temaActual);
                 conectarServidorCloud();
                 inicializarEventosArrastrarArchivos();
@@ -369,6 +390,11 @@
                 localStorage.setItem("wasapedro_my_avatar", miFotoB64);
                 renderizarMisAvatars();
                 cancelarRecorte();
+                
+                // PUBLICAR NUEVA FOTO EN TIEMPO REAL A TODOS LOS CONTACTOS
+                if (clienteMqtt && clienteMqtt.connected) {
+                    clienteMqtt.publish(`wasapedro/v3/status/fotos`, JSON.stringify({ usuario: miNombre, foto: miFotoB64 }), { retain: true });
+                }
                 if(chatActivo) abrirChat(chatActivo); 
             });
         }
@@ -438,9 +464,15 @@
             clienteMqtt.on('connect', () => {
                 clienteMqtt.subscribe(`wasapedro/v3/chat/${miNombre}`);
                 clienteMqtt.subscribe(`wasapedro/v3/sistema/bans`); 
+                clienteMqtt.subscribe(`wasapedro/v3/status/fotos`); // Canal global de sincronización de fotos
                 
                 Object.keys(datosGrupos).forEach(id => clienteMqtt.subscribe(`wasapedro/v3/grupo/${id}`));
                 if (esAdmin) { clienteMqtt.subscribe(`wasapedro/v3/sistema/reportes`); }
+
+                // Publicar nuestra foto de perfil actual retenida para los que se conecten
+                if (miFotoB64) {
+                    clienteMqtt.publish(`wasapedro/v3/status/fotos`, JSON.stringify({ usuario: miNombre, foto: miFotoB64 }), { retain: true });
+                }
 
                 actualizarListaAmigosUI();
             });
@@ -448,6 +480,19 @@
             clienteMqtt.on('message', (topico, mensaje) => {
                 try {
                     const data = JSON.parse(mensaje.toString());
+
+                    // ESCUCHAR ACTUALIZACIONES DE FOTOS EN TIEMPO REAL
+                    if (topico === `wasapedro/v3/status/fotos`) {
+                        if (data.usuario && data.usuario !== miNombre) {
+                            fotosAmigos[data.usuario] = data.foto;
+                            localStorage.setItem("wasapedro_fotos_amigos", JSON.stringify(fotosAmigos));
+                            actualizarListaAmigosUI();
+                            if (chatActivo === data.usuario) {
+                                renderizarFotoCabeceraChat(chatActivo);
+                            }
+                        }
+                        return;
+                    }
 
                     // ESCUCHAR EXPULSIONES (BANEOS) GLOBALMENTE
                     if (topico === `wasapedro/v3/sistema/bans`) {
@@ -482,6 +527,7 @@
                     if (data.fotoEmisor) {
                         fotosAmigos[data.emisor] = data.fotoEmisor;
                         localStorage.setItem("wasapedro_fotos_amigos", JSON.stringify(fotosAmigos));
+                        actualizarListaAmigosUI();
                     }
 
                     if (!historialesDeChats[idChat]) historialesDeChats[idChat] = [];
@@ -522,10 +568,49 @@
             document.getElementById("pantalla-chat-activa").classList.add("flex");
 
             const esGrupo = datosGrupos[id];
-            document.getElementById("nombre-chat-amigo").textContent = esGrupo ? datosGrupos[id].nombre : id;
-            document.getElementById("btn-abrir-reporte").classList.remove("hidden"); // Mostrar botón de denuncia
+            const nombreMostrar = apodosContactos[id] || (esGrupo ? datosGrupos[id].nombre : id);
+            
+            document.getElementById("nombre-chat-amigo").textContent = nombreMostrar;
+            
+            // Configurar el botón de bloquear del menú contextual
+            const btnBloquear = document.getElementById("btn-menu-bloquear");
+            if (esGrupo) {
+                btnBloquear.classList.add("hidden");
+            } else {
+                btnBloquear.classList.remove("hidden");
+                if (listaBloqueados.includes(id)) {
+                    btnBloquear.innerHTML = '<i class="ph ph-check-circle"></i> Desbloquear';
+                } else {
+                    btnBloquear.innerHTML = '<i class="ph ph-prohibit"></i> Bloquear';
+                }
+            }
 
+            renderizarFotoCabeceraChat(id);
             renderizarMensajes();
+            actualizarListaAmigosUI();
+        }
+
+        function renderizarFotoCabeceraChat(id) {
+            const esGrupo = datosGrupos[id];
+            const imgAvatar = document.getElementById("avatar-chat-img");
+            const txtAvatar = document.getElementById("avatar-chat-txt");
+            const nombreMostrar = apodosContactos[id] || (esGrupo ? datosGrupos[id].nombre : id);
+
+            if (esGrupo) {
+                imgAvatar.classList.add("hidden");
+                txtAvatar.innerHTML = '<i class="ph ph-users-three text-sm"></i>';
+                txtAvatar.classList.remove("hidden");
+                txtAvatar.classList.add("flex");
+            } else if (fotosAmigos[id]) {
+                txtAvatar.classList.add("hidden");
+                imgAvatar.src = fotosAmigos[id];
+                imgAvatar.classList.remove("hidden");
+            } else {
+                imgAvatar.classList.add("hidden");
+                txtAvatar.textContent = nombreMostrar.charAt(0).toUpperCase();
+                txtAvatar.classList.remove("hidden");
+                txtAvatar.classList.add("flex");
+            }
         }
 
         function enviarMensajeTexto() {
@@ -567,7 +652,11 @@
                 d.className = `flex flex-col max-w-[75%] ${soyYo ? 'ml-auto items-end' : 'mr-auto items-start'} mb-2`;
                 
                 let cuerpo = "";
-                if(!soyYo && datosGrupos[chatActivo]) cuerpo += `<span class="text-[10px] text-gray-400 font-bold mb-0.5">~${m.emisor}</span>`;
+                // ARRIBA DE CADA MENSAJE SE COLOCA EL EMISOR CORREGIDO (EVITANDO UNDEFINED)
+                if(!soyYo && datosGrupos[chatActivo]) {
+                    const nombreEmisor = m.emisor || "Usuario";
+                    cuerpo += `<span class="text-[10px] text-gray-400 font-bold mb-0.5">~${nombreEmisor}</span>`;
+                }
                 
                 cuerpo += `<div class="p-3 rounded-xl text-sm ${soyYo ? 'bg-[#00a884] text-black font-medium' : 'bg-[#202d33] text-gray-100'}">`;
                 if(m.archivoB64) {
@@ -587,20 +676,22 @@
             const contenedor = document.getElementById("contenedor-lista-dinamica");
             contenedor.innerHTML = "";
             
-            // Unir arreglos asegurando IDs únicos
             let unificados = [...new Set([...ordenChats, ...listaAmigosActivos])];
             ordenChats = unificados;
             localStorage.setItem("wasapedro_orden_chats", JSON.stringify(ordenChats));
 
             ordenChats.forEach(id => {
                 const esGrupo = datosGrupos[id];
-                const nombre = esGrupo ? datosGrupos[id].nombre : id;
+                const nombre = apodosContactos[id] || (esGrupo ? datosGrupos[id].nombre : id);
+                const tieneFoto = fotosAmigos[id];
                 const div = document.createElement("div");
+                
                 div.className = `p-3 flex items-center gap-3 rounded-xl cursor-pointer hover:bg-[#202d33] border border-transparent transition ${chatActivo === id ? 'bg-[#202d33]' : 'bg-[#111b21]'}`;
                 div.onclick = () => abrirChat(id);
+                
                 div.innerHTML = `
-                    <div class="w-10 h-10 bg-[#2a3942] rounded-full flex items-center justify-center font-bold text-sm">
-                        ${esGrupo ? '<i class="ph ph-users-three text-lg"></i>' : nombre.charAt(0).toUpperCase()}
+                    <div class="w-10 h-10 bg-[#2a3942] rounded-full flex items-center justify-center font-bold text-sm overflow-hidden flex-shrink-0">
+                        ${esGrupo ? '<i class="ph ph-users-three text-lg"></i>' : (tieneFoto ? `<img src="${tieneFoto}" class="w-full h-full object-cover">` : nombre.charAt(0).toUpperCase())}
                     </div>
                     <div class="flex-1 min-w-0">
                         <span class="text-sm font-bold text-gray-200 block truncate">${nombre}</span>
@@ -634,6 +725,90 @@
             });
         }
 
+        // --- SISTEMA MENÚ DE OPCIONES DEL CHAT ACTIVO ---
+        function toggleMenuOpcionesChat() {
+            const menu = document.getElementById("menu-opciones-chat");
+            menu.classList.toggle("hidden");
+        }
+
+        // Ocultar menú si se hace click en otro lado
+        document.addEventListener("click", function(e) {
+            const menu = document.getElementById("menu-opciones-chat");
+            const btn = menu?.previousElementSibling;
+            if (menu && !menu.classList.contains("hidden") && !menu.contains(e.target) && !btn.contains(e.target)) {
+                menu.classList.add("hidden");
+            }
+        });
+
+        function menuPonerApodo() {
+            document.getElementById("menu-opciones-chat").classList.add("hidden");
+            if (!chatActivo) return;
+            const actual = apodosContactos[chatActivo] || "";
+            const nuevo = prompt("Introduce el apodo local para este chat:", actual);
+            if (nuevo !== null) {
+                if (nuevo.trim() === "") {
+                    delete apodosContactos[chatActivo];
+                } else {
+                    apodosContactos[chatActivo] = nuevo.trim();
+                }
+                localStorage.setItem("wasapedro_apodos", JSON.stringify(apodosContactos));
+                actualizarListaAmigosUI();
+                abrirChat(chatActivo);
+            }
+        }
+
+        function menuBorrarChat() {
+            document.getElementById("menu-opciones-chat").classList.add("hidden");
+            if (!chatActivo) return;
+            if (confirm("¿Estás completamente seguro de que deseas borrar el historial local de este chat?")) {
+                historialesDeChats[chatActivo] = [];
+                localStorage.setItem("wasapedro_historiales", JSON.stringify(historialesDeChats));
+                renderizarMensajes();
+            }
+        }
+
+        function menuBloquearContacto() {
+            document.getElementById("menu-opciones-chat").classList.add("hidden");
+            if (!chatActivo) return;
+            if (datosGrupos[chatActivo]) return alert("No se pueden bloquear salas de grupos.");
+            
+            const idx = listaBloqueados.indexOf(chatActivo);
+            if (idx > -1) {
+                listaBloqueados.splice(idx, 1);
+                alert(`Has desbloqueado a @${chatActivo}`);
+            } else {
+                listaBloqueados.push(chatActivo);
+                alert(`Has bloqueado a @${chatActivo}`);
+            }
+            localStorage.setItem("wasapedro_bloqueados", JSON.stringify(listaBloqueados));
+            actualizarListaBloqueadosUI();
+            abrirChat(chatActivo);
+        }
+
+        function actualizarListaBloqueadosUI() {
+            const cont = document.getElementById("contenedor-bloqueados");
+            if (!cont) return;
+            cont.innerHTML = "";
+            if (listaBloqueados.length === 0) {
+                cont.innerHTML = '<p class="text-xs text-gray-500 italic">No hay contactos bloqueados.</p>';
+                return;
+            }
+            listaBloqueados.forEach(b => {
+                const div = document.createElement("div");
+                div.className = "flex justify-between items-center bg-[#111b21] p-2 rounded border border-[#222e35] text-xs";
+                div.innerHTML = `<span>@${b}</span> <button onclick="desbloquearDirecto('${b}')" class="text-red-400 hover:text-red-500 font-bold">Desbloquear</button>`;
+                cont.appendChild(div);
+            });
+        }
+
+        function desbloquearDirecto(u) {
+            listaBloqueados = listaBloqueados.filter(x => x !== u);
+            localStorage.setItem("wasapedro_bloqueados", JSON.stringify(listaBloqueados));
+            actualizarListaBloqueadosUI();
+            if (chatActivo === u) abrirChat(u);
+        }
+
+        // --- SISTEMA CONFIGURACIÓN GENERAL ---
         function cambiarTema(c) {
             temaActual = c;
             localStorage.setItem("wasapedro_theme_color", c);
@@ -702,11 +877,10 @@
             lector.readAsDataURL(archivo);
         }
 
-        // --- 🛡️ NUEVAS FUNCIONES DE ADMINISTRACIÓN Y REPORTES ---
-
-        // Abrir ventana para rellenar la denuncia
+        // --- 🛡️ FUNCIONES DE ADMINISTRACIÓN Y REPORTES ---
         function abrirModalReporte() {
             if(!chatActivo) return;
+            document.getElementById("menu-opciones-chat").classList.add("hidden");
             document.getElementById("nombre-reportado-txt").textContent = chatActivo;
             document.getElementById("input-motivo-reporte").value = "";
             document.getElementById("modal-reporte").classList.remove("hidden");
@@ -716,7 +890,6 @@
             document.getElementById("modal-reporte").classList.add("hidden");
         }
 
-        // El reporte se emite vía MQTT al canal general del staff administrativo
         function enviarReporte() {
             const motivo = document.getElementById("input-motivo-reporte").value.trim();
             if (motivo.length < 5) return alert("Por favor, rellena el cuadro explicando el porqué.");
@@ -734,19 +907,17 @@
             cerrarModalReporte();
         }
 
-        // Abrir el recuadro rectangular de verificación de contraseña
         function abrirModalAdminLogin() {
             document.getElementById("input-admin-pass").value = "";
             document.getElementById("modal-admin-login").classList.remove("hidden");
         }
 
-        // Validación de privilegios
         function verificarAdmin() {
             const contra = document.getElementById("input-admin-pass").value;
             if (contra === CONTRASENA_ADMIN_MASTER) {
                 esAdmin = true;
                 localStorage.setItem("wasapedro_is_admin", "true");
-                clienteMqtt.subscribe(`wasapedro/v3/sistema/reportes`); // Suscribirse a denuncias en vivo
+                clienteMqtt.subscribe(`wasapedro/v3/sistema/reportes`);
 
                 document.getElementById("modal-admin-login").classList.add("hidden");
                 document.getElementById("modal-config").classList.add("hidden");
@@ -757,7 +928,6 @@
             }
         }
 
-        // Renderizar denuncias en el Panel de Administración
         function renderizarReportesAdmin() {
             const contenedor = document.getElementById("lista-denuncias-admin");
             contenedor.innerHTML = "";
@@ -787,7 +957,6 @@
             });
         }
 
-        // Responder denuncias enviando un mensaje directo de soporte
         function responderReporte(denunciante, idReporte) {
             const msgAdmin = prompt(`Escribe la respuesta/resolución oficial para @${denunciante}:`);
             if (msgAdmin && msgAdmin.trim() !== "") {
@@ -802,7 +971,6 @@
             }
         }
 
-        // Banear usuarios enviando comando letal por MQTT
         function ejecutarBaneo(usuarioTarget) {
             if (usuarioTarget === miNombre) return alert("No puedes autosancionarte.");
             const razon = prompt(`Introduce la razón del baneo permanente para @${usuarioTarget}:`);
@@ -816,14 +984,12 @@
             }
         }
 
-        // Eliminar denuncia de la interfaz local
         function eliminarReporte(idReporte) {
             reportesRecibidos = reportesRecibidos.filter(r => r.id !== idReporte);
             localStorage.setItem("wasapedro_reportes", JSON.stringify(reportesRecibidos));
             renderizarReportesAdmin();
         }
 
-        // Soporte de envío rápido pulsando la tecla Enter
         document.getElementById("input-mensaje")?.addEventListener("keypress", function(e) {
             if (e.key === "Enter") enviarMensajeTexto();
         });
