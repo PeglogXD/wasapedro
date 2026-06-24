@@ -24,19 +24,8 @@
 </head>
 <body class="h-screen w-screen flex flex-col bg-[#0b141a] text-[#e9edef] font-sans overflow-hidden select-none p-0">
 
-    <!-- BARRA DE LA VENTANA (ÚNICA Y REACTIVA) -->
-    <div id="barra-ventana" class="w-full h-9 bg-[#00a884] theme-bg flex items-center justify-end px-6 flex-shrink-0 z-50 shadow-md transition-colors duration-200 gap-5 text-sm font-bold">
-        <button class="hover:opacity-70 transition"><i class="ph ph-key"></i></button>
-        <button class="hover:opacity-70 transition"><i class="ph ph-dots-three-vertical text-lg"></i></button>
-        <button class="hover:opacity-70 transition"><i class="ph ph-minus text-base"></i></button>
-        <button class="hover:opacity-70 transition"><i class="ph ph-square text-xs"></i></button>
-        <button class="hover:opacity-70 transition" onclick="alert('Ventana minimizada o cerrada virtualmente.')"><i class="ph ph-x text-base"></i></button>
-    </div>
-
-    <!-- CONTENEDOR DEL ESPACIO DE TRABAJO -->
     <div class="flex-1 w-full flex flex-col items-center justify-center p-4 overflow-hidden relative">
 
-        <!-- 1. PANTALLA DE REGISTRO -->
         <div id="pantalla-registro" class="bg-[#111b21] p-8 rounded-2xl shadow-2xl border border-[#222e35] max-w-sm w-full text-center hidden z-10">
             <h1 class="text-3xl font-extrabold text-[#00a884] mb-2 theme-text">WasaPedro</h1>
             <p class="text-gray-400 text-sm mb-6">Ingresa tu usuario para iniciar sesión.</p>
@@ -52,10 +41,8 @@
             <button id="btn-guardar" class="w-full bg-[#00a884] theme-bg hover:opacity-90 text-[#111b21] font-bold p-3 rounded-lg transition disabled:opacity-50">Ingresar / Restaurar</button>
         </div>
 
-        <!-- 2. INTERFAZ PRINCIPAL -->
-        <div id="interfaz-principal" class="w-full max-w-4xl h-[85vh] bg-[#111b21] rounded-2xl shadow-2xl border border-[#222e35] overflow-hidden hidden z-10">
+        <div id="interfaz-principal" class="w-full max-w-4xl h-[90vh] bg-[#111b21] rounded-2xl shadow-2xl border border-[#222e35] overflow-hidden hidden z-10">
             
-            <!-- SIDEBAR IZQUIERDO -->
             <div class="w-1/3 border-r border-[#222e35] flex flex-col bg-[#111b21]">
                 <div class="p-4 bg-[#202d33] flex justify-between items-center">
                     <div class="flex items-center gap-3 min-w-0">
@@ -93,7 +80,6 @@
                 </div>
             </div>
 
-            <!-- VENTANA DE CHAT VACÍA -->
             <div class="flex-1 flex flex-col bg-[#222e35] bg-opacity-20" id="pantalla-chat-vacia">
                 <div class="m-auto text-center max-w-sm">
                     <h3 class="text-xl font-semibold text-gray-300">WasaPedro Pro Plus</h3>
@@ -101,7 +87,6 @@
                 </div>
             </div>
 
-            <!-- VENTANA DE CHAT ACTIVA -->
             <div class="flex-1 flex flex-col bg-[#0b141a] relative hidden" id="pantalla-chat-activa">
                 <div id="zona-drop-visual" class="absolute inset-0 bg-[#00a884]/20 border-4 border-dashed border-[#00a884] z-50 flex flex-col items-center justify-center backdrop-blur-sm pointer-events-none transition-all duration-200 opacity-0">
                     <i class="ph ph-cloud-arrow-up text-6xl text-white mb-2 animate-bounce"></i>
@@ -118,7 +103,6 @@
                         </div>
                     </div>
                     
-                    <!-- MENÚ DE OPCIONES DESPLEGABLE -->
                     <div class="relative">
                         <button onclick="toggleMenuOpcionesChat()" class="text-xl text-gray-400 hover:text-white p-2 rounded-full transition" title="Opciones de chat">
                             <i class="ph ph-dots-three-vertical text-2xl"></i>
@@ -149,7 +133,6 @@
 
     </div>
 
-    <!-- MODAL GRUPO -->
     <div id="modal-grupo" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-sm rounded-2xl p-6 shadow-2xl">
             <h2 class="text-lg font-bold text-white mb-3 flex items-center gap-2"><i class="ph ph-users-three text-[#00a884] theme-text"></i> Crear Nuevo Grupo</h2>
@@ -162,7 +145,6 @@
         </div>
     </div>
 
-    <!-- MODAL CROPPIE -->
     <div id="modal-crop" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-[60]">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-sm rounded-2xl p-5 shadow-2xl flex flex-col">
             <h2 class="text-sm font-bold text-white mb-4 text-center">Ajusta tu foto de perfil</h2>
@@ -176,7 +158,6 @@
         </div>
     </div>
 
-    <!-- MODAL CONFIGURACIÓN -->
     <div id="modal-config" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-md rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
@@ -184,7 +165,6 @@
                 <button onclick="document.getElementById('modal-config').classList.add('hidden')" class="text-gray-400 hover:text-white text-lg"><i class="ph ph-x"></i></button>
             </div>
 
-            <!-- SECCIÓN CUENTA -->
             <div class="mb-6 p-4 bg-[#182229] border border-[#222e35] rounded-xl">
                 <label class="text-xs font-bold uppercase tracking-wider text-[#00a884] theme-text block mb-3 flex items-center gap-1">
                     <i class="ph ph-user-circle-gear text-base"></i> Cuenta y Foto de Perfil
@@ -246,7 +226,6 @@
         </div>
     </div>
 
-    <!-- MODAL DE DENUNCIAS -->
     <div id="modal-reporte" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-[70]">
         <div class="bg-[#111b21] border border-[#222e35] w-full max-w-sm rounded-2xl p-6 shadow-2xl">
             <h2 class="text-lg font-bold text-red-500 mb-2 flex items-center gap-2">
@@ -261,7 +240,6 @@
         </div>
     </div>
 
-    <!-- MODAL CONTRASEÑA ADMIN -->
     <div id="modal-admin-login" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 hidden z-[70]">
         <div class="bg-[#111b21] border-2 border-yellow-600 w-full max-w-xs rounded-xl p-6 shadow-2xl text-center">
             <i class="ph ph-shield-star text-4xl text-yellow-500 mb-2"></i>
@@ -274,7 +252,6 @@
         </div>
     </div>
 
-    <!-- PANEL COMPLETO DE CONTROL ADMIN -->
     <div id="modal-admin-panel" class="fixed inset-0 bg-black/90 flex items-center justify-center p-4 hidden z-[80]">
         <div class="bg-[#111b21] border border-yellow-600 w-full max-w-2xl h-[80vh] rounded-2xl p-6 shadow-2xl flex flex-col">
             <div class="flex justify-between items-center mb-4 border-b border-[#222e35] pb-4">
@@ -553,6 +530,7 @@
             });
         }
 
+        // --- SISTEMA DE SELECCIÓN Y BÚSQUEDA ---
         function buscarAmigo() {
             const nom = document.getElementById("input-buscar").value.trim().toLowerCase();
             if (!nom || nom === miNombre) return;
@@ -666,7 +644,7 @@
                     cuerpo += `<span class="text-[10px] text-gray-400 font-bold mb-0.5">~${nombreEmisor}</span>`;
                 }
                 
-                // Los globos enviados aplican el color de tema dinámicamente
+                // Los globos de tus propios mensajes cambian de color de forma totalmente reactiva
                 let estiloBubble = soyYo ? `style="background-color: ${temaActual}; color: ${colorTextoMsg};"` : '';
                 
                 cuerpo += `<div ${estiloBubble} class="p-3 rounded-xl text-sm ${soyYo ? 'font-medium shadow-sm' : 'bg-[#202d33] text-gray-100'}">`;
@@ -818,7 +796,7 @@
             if (chatActivo === u) abrirChat(u);
         }
 
-        // --- CAMBIAR TEMA (SOPORTE TOTALMENTE REACTIVO) ---
+        // --- CAMBIAR TEMA (REACTIVIDAD NATIVA) ---
         function cambiarTema(c) {
             temaActual = c;
             localStorage.setItem("wasapedro_theme_color", c);
@@ -829,19 +807,10 @@
             document.querySelectorAll(".theme-bg").forEach(el => el.style.backgroundColor = c);
             document.querySelectorAll(".theme-text").forEach(el => el.style.color = c);
             
-            // Forzar cambio directo en los metatags e íconos de la barra superior original
+            // Forzar actualización del metatag que controla el color de la barra nativa del sistema
             document.getElementById("meta-theme")?.setAttribute("content", c);
-            const colorTextoBarra = (c === '#00a884') ? '#111b21' : '#ffffff';
-            const barra = document.getElementById("barra-ventana");
-            if (barra) {
-                barra.style.backgroundColor = c;
-                barra.style.color = colorTextoBarra;
-                barra.querySelectorAll("button, i").forEach(child => {
-                    child.style.color = colorTextoBarra;
-                });
-            }
             
-            // Volver a pintar los mensajes activos para aplicar el nuevo tono de fondo
+            // Volver a pintar los mensajes activos para aplicar el nuevo fondo en tiempo real
             if (chatActivo) {
                 renderizarMensajes();
             }
@@ -1023,7 +992,7 @@
             if (e.key === "Enter") enviarMensajeTexto();
         });
 
-        // Lanzamiento inicial de la interfaz
+        // Lanzamiento inicial del estado de la aplicación
         inicializarUI();
     </script>
 </body>
