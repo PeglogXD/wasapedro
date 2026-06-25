@@ -265,7 +265,6 @@
     </div>
 
     <script>
-        // --- INICIALIZACIÓN DE VARIABLES DESDE MEMORIA LOCAL ---
         let miNombre = localStorage.getItem("wasapedro_mqtt_name") || "";
         let miFotoB64 = localStorage.getItem("wasapedro_my_avatar") || "";
         let clienteMqtt = null;
@@ -288,8 +287,12 @@
         let reportesRecibidos = JSON.parse(localStorage.getItem("wasapedro_reportes")) || [];
         const CONTRASENA_ADMIN_MASTER = "wasapedro123";
 
-        const clienteValidacion = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
+        // CORRECCIÓN 1: Se cambió el puerto a 8033 para conexión real WSS
+        const clienteValidacion = mqtt.connect('wss://broker.hivemq.com:8033/mqtt');
         
+        // Se añade manejador de errores global para evitar congelamientos
+        clienteValidacion.on('error', (err) => console.log("Error en Validación:", err));
+
         clienteValidacion.on('connect', () => {
             if (miNombre) { clienteValidacion.subscribe(`wasapedro/v3/verificar/${miNombre}`); }
         });
@@ -303,7 +306,6 @@
             } catch(e) {}
         });
 
-        // --- MANEJO DE ESTADO INICIAL ---
         function inicializarUI() {
             const pantallaRegistro = document.getElementById("pantalla-registro");
             const interfazPrincipal = document.getElementById("interfaz-principal");
@@ -353,7 +355,6 @@
             }
         }
 
-        // --- RECORTE (CROPPIE) ---
         function iniciarProcesoRecorte(archivo) {
             if (!archivo) return;
             if (!archivo.type.match('image.*')) return alert("Imagen no válida.");
@@ -387,7 +388,6 @@
             });
         }
 
-        // --- CONTROL DE REGISTRO ---
         document.getElementById("btn-guardar").addEventListener("click", () => {
             const nombreIngresado = document.getElementById("input-nombre").value.trim().toLowerCase();
             const emailRecuperar = document.getElementById("input-recuperar-email").value.trim().toLowerCase();
@@ -428,7 +428,6 @@
             }, 1200);
         }
 
-        // --- SISTEMA DE GRUPOS ---
         function abrirModalGrupo() { document.getElementById("modal-grupo").classList.remove("hidden"); }
         function cerrarModalGrupo() { document.getElementById("modal-grupo").classList.add("hidden"); }
         function procesarCrearGrupo() {
@@ -445,9 +444,14 @@
             abrirChat(idGrupo);
         }
 
-        // --- CONEXIÓN MQTT Y CHATS ---
         function conectarServidorCloud() {
-            clienteMqtt = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', { clientId: "wp_cl_" + miNombre + "_" + Date.now() });
+            // CORRECCIÓN 2: Se cambió el puerto del cliente principal a 8033
+            clienteMqtt = mqtt.connect('wss://broker.hivemq.com:8033/mqtt', { clientId: "wp_cl_" + miNombre + "_" + Date.now() });
+
+            // CORRECCIÓN 3: Se añade capturador para evitar que un fallo de red tire la app
+            clienteMqtt.on('error', (err) => {
+                console.error("Fallo de red o desconexión en bróker MQTT:", err);
+            });
 
             clienteMqtt.on('connect', () => {
                 clienteMqtt.subscribe(`wasapedro/v3/chat/${miNombre}`);
@@ -530,7 +534,6 @@
             });
         }
 
-        // --- SISTEMA DE SELECCIÓN Y BÚSQUEDA ---
         function buscarAmigo() {
             const nom = document.getElementById("input-buscar").value.trim().toLowerCase();
             if (!nom || nom === miNombre) return;
@@ -543,7 +546,6 @@
             abrirChat(nom);
         }
 
-        // --- ABRIR CHAT ---
         function abrirChat(id) {
             chatActivo = id;
             delete notificacionesPendientes[id];
@@ -619,14 +621,17 @@
             localStorage.setItem("wasapedro_historiales", JSON.stringify(historialesDeChats));
 
             const topico = esGrupo ? `wasapedro/v3/grupo/${chatActivo}` : `wasapedro/v3/chat/${chatActivo}`;
-            clienteMqtt.publish(topico, JSON.stringify(payload));
+            
+            // Si el cliente existe, envía. Al estar en el puerto correcto, ahora sí funcionará fluidamente.
+            if(clienteMqtt) {
+                clienteMqtt.publish(topico, JSON.stringify(payload));
+            }
 
             input.value = "";
             moverChatAlPrincipio(chatActivo);
             renderizarMensajes();
         }
 
-        // --- RENDERIZAR MENSAJES (REACTIVOS AL TEMA SELECCIONADO) ---
         function renderizarMensajes() {
             const contenedor = document.getElementById("contenedor-mensajes");
             contenedor.innerHTML = "";
@@ -714,7 +719,6 @@
             });
         }
 
-        // --- OPCIONES CHAT ---
         function toggleMenuOpcionesChat() {
             const menu = document.getElementById("menu-opciones-chat");
             menu.classList.toggle("hidden");
@@ -796,7 +800,6 @@
             if (chatActivo === u) abrirChat(u);
         }
 
-        // --- SISTEMA DE CAMBIO DE TEMAS ---
         function cambiarTema(c) {
             temaActual = c;
             localStorage.setItem("wasapedro_theme_color", c);
@@ -806,10 +809,7 @@
         function aplicarColorTema(c) {
             document.querySelectorAll(".theme-bg").forEach(el => el.style.backgroundColor = c);
             document.querySelectorAll(".theme-text").forEach(el => el.style.color = c);
-            
-            // La barra nativa se mantiene de un color oscuro unificado para que no rompa la estética
             document.getElementById("meta-theme")?.setAttribute("content", "#111b21");
-            
             if (chatActivo) {
                 renderizarMensajes();
             }
@@ -837,7 +837,6 @@
             location.reload();
         }
 
-        // --- ACCIONES ARRASTRAR ARCHIVOS ---
         function inicializarEventosArrastrarArchivos() {
             const zona = document.getElementById("pantalla-chat-activa");
             const visual = document.getElementById("zona-drop-visual");
@@ -874,7 +873,6 @@
             lector.readAsDataURL(archivo);
         }
 
-        // --- ADMINISTRACIÓN Y MODERACIÓN ---
         function abrirModalReporte() {
             if(!chatActivo) return;
             document.getElementById("menu-opciones-chat").classList.add("hidden");
