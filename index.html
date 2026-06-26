@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WasaPedro</title>
+    <title>WasaPedro Premium v4 + Control de Administración</title>
     <link rel="manifest" href="manifest.json"> 
     <meta name="theme-color" id="meta-theme" content="#111b21">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -86,7 +86,7 @@
             <div class="flex-1 flex flex-col bg-[#222e35] bg-opacity-20" id="pantalla-chat-vacia">
                 <div class="m-auto text-center max-w-sm">
                     <h3 class="text-xl font-semibold text-gray-300">WasaPedro Pro Plus</h3>
-                    <p class="text-sm text-gray-500 mt-2">Whatsapp estudiantil para chromebooks institucionales</p>
+                    <p class="text-sm text-gray-500 mt-2">Sistema autoreparable con cola de mensajes offline inteligente y cifrado básico sobre red EMQX.</p>
                 </div>
             </div>
 
@@ -294,8 +294,10 @@
         let reportesRecibidos = JSON.parse(localStorage.getItem("wasapedro_reportes")) || [];
         const CONTRASENA_ADMIN_MASTER = "wasapedro123";
 
-        // CONFIGURACIÓN SEGURA DE VALIDACIÓN (Puerto 8884 Oficial)
-        const clienteValidacion = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
+        // CONFIGURACIÓN DE RED CERTIFICADA MUNDIAL (EMQX WSS Puerto 8084)
+        const URL_SERVIDOR_MESSENGER = 'wss://broker.emqx.io:8084/mqtt';
+
+        const clienteValidacion = mqtt.connect(URL_SERVIDOR_MESSENGER);
         
         clienteValidacion.on('error', (err) => console.log("Error en Validación:", err));
 
@@ -467,18 +469,17 @@
             abrirChat(idGrupo);
         }
 
-        // MOTOR CENTRAL DE COMUNICACIÓN AUTOREPARABLE
+        // MOTOR CENTRAL DE COMUNICACIÓN AUTOREPARABLE (OPTIMIZADO PARA EMQX)
         function conectarServidorCloud() {
             if (clienteMqtt) {
                 try { clienteMqtt.end(true); } catch(e){}
             }
             actualizarPildoraConexion("conectando");
 
-            // SE CONECTA AL PUERTO SEGURO OFICIAL DE HIVEMQ PUBLIC (8884)
-            clienteMqtt = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', { 
-                clientId: "wp_cl_" + miNombre + "_" + Date.now(),
+            clienteMqtt = mqtt.connect(URL_SERVIDOR_MESSENGER, { 
+                clientId: "wp_cl_" + miNombre + "_" + Math.floor(Math.random() * 100000),
                 reconnectPeriod: 3000, 
-                connectTimeout: 7000,
+                connectTimeout: 10000,
                 clean: true
             });
 
@@ -487,7 +488,6 @@
                 actualizarPildoraConexion("desconectado");
                 reintentosMqttSeguidos++;
                 
-                // SISTEMA AUTO-CURACIÓN: Si se corrompe la instancia tras 5 reintentos, reconstruye el puente de red
                 if (reintentosMqttSeguidos > 5) {
                     reintentosMqttSeguidos = 0;
                     console.log("Reiniciando pila de red MQTT para corregir congelamiento...");
@@ -519,7 +519,6 @@
                 }
 
                 actualizarListaAmigosUI();
-                // Al conectar, despacha cualquier mensaje que se haya quedado congelado en la cola
                 procesarColaDeEnvios();
             });
 
@@ -573,11 +572,9 @@
                         actualizarListaAmigosUI();
                     }
 
-                    // Forzar que el mensaje entrante se guarde como confirmado/enviado
                     data.enviado = true;
 
                     if (!historialesDeChats[idChat]) historialesDeChats[idChat] = [];
-                    // Evitar duplicados por re-transmisiones del broker
                     if (!historialesDeChats[idChat].some(m => m.idMsg === data.idMsg)) {
                         historialesDeChats[idChat].push(data);
                         localStorage.setItem("wasapedro_historiales", JSON.stringify(historialesDeChats));
@@ -595,7 +592,6 @@
             });
         }
 
-        // CONTROLADOR DE COLA OFFLINE (Despachador asíncrono que auto-arregla envíos pendientes)
         function procesarColaDeEnvios() {
             if (!clienteMqtt || !clienteMqtt.connected || colaEnvios.length === 0) return;
 
@@ -604,11 +600,8 @@
                 try {
                     clienteMqtt.publish(item.topico, JSON.stringify(item.payload), { qos: 1 }, (error) => {
                         if (!error) {
-                            // Remueve de la cola al ser recibido exitosamente por el servidor
                             colaEnvios = colaEnvios.filter(c => c.idMsg !== item.idMsg);
                             localStorage.setItem("wasapedro_cola_envios", JSON.stringify(colaEnvios));
-                            
-                            // Cambia el estado del reloj de arena a doble check azul
                             marcarMensajeComoEnviadoExitoso(item.chatId, item.idMsg);
                         }
                     });
@@ -716,7 +709,6 @@
             const esGrupo = datosGrupos[chatActivo];
             if (esGrupo) payload.nombreGrupo = datosGrupos[chatActivo].nombre;
 
-            // Se guarda en el historial inmediatamente marcado como "No enviado a internet" de forma asíncrona
             const objetoHistorial = { ...payload, enviado: false };
             if (!historialesDeChats[chatActivo]) historialesDeChats[chatActivo] = [];
             historialesDeChats[chatActivo].push(objetoHistorial);
@@ -724,16 +716,13 @@
 
             const topico = esGrupo ? `wasapedro/v3/grupo/${chatActivo}` : `wasapedro/v3/chat/${chatActivo}`;
             
-            // Se encola en la memoria segura
             colaEnvios.push({ idMsg: idUnicoMensaje, chatId: chatActivo, topico: topico, payload: payload });
             localStorage.setItem("wasapedro_cola_envios", JSON.stringify(colaEnvios));
 
-            // ACCIÓN INMEDIATA: Limpia la pantalla y renderiza sin esperar al servidor
             input.value = "";
             moverChatAlPrincipio(chatActivo);
             renderizarMensajes();
             
-            // Intenta despachar
             procesarColaDeEnvios();
         }
 
@@ -763,10 +752,9 @@
                 }
                 if(m.texto) cuerpo += `<p class="break-all">${m.texto}</p>`;
                 
-                // SISTEMA VISUAL DE CONFIRMACIÓN
                 if (soyYo) {
                     const iconoEstado = m.enviado 
-                        ? '<i class="ph ph-checks text-cyan-400 ml-1 text-xs" title="Entregado al bróker"></i>' 
+                        ? '<i class="ph ph-checks text-cyan-400 ml-1 text-xs" title="Entregado"></i>' 
                         : '<i class="ph ph-clock text-gray-400 ml-1 text-xs animate-spin" title="En cola de auto-arreglo"></i>';
                     cuerpo += `<div class="text-right block text-[9px] opacity-70 mt-0.5">${iconoEstado}</div>`;
                 }
