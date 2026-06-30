@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WasaPedro Premium v5 - Modern Night Edition</title>
+    <title>WasaPedro</title>
     <link rel="manifest" href="manifest.json"> 
     <meta name="theme-color" id="meta-theme" content="#0a0f1d">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -112,8 +112,8 @@
             <div class="flex-1 flex flex-col bg-[#0f172a]" id="pantalla-chat-vacia">
                 <div class="m-auto text-center max-w-xs px-4">
                     <div class="text-5xl text-slate-700 mb-3"><i class="ph ph-chat-circle-dots-thin"></i></div>
-                    <h3 class="text-base font-semibold text-slate-300">WasaPedro Cyber Edition</h3>
-                    <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">Selecciona un chat o añade un ID de grupo para iniciar transmisiones encriptadas sobre red EMQX.</p>
+                    <h3 class="text-base font-semibold text-slate-300">WasaPedro Chromebook Edition</h3>
+                    <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">Whassapp para estudiantes compatibles con chormebooks institucionales</p>
                 </div>
             </div>
 
@@ -313,21 +313,21 @@
         let ordenChats = JSON.parse(localStorage.getItem("wasapedro_orden_chats")) || []; 
         let gmailVinculado = localStorage.getItem("wasapedro_gmail_link") || "";
         
-        // COLA DE ENVIOS OFFLINE (Auto-arreglo)
+        // COLA DE ENVIOS OFFLINE 
         let colaEnvios = JSON.parse(localStorage.getItem("wasapedro_cola_envios")) || [];
         let reintentosMqttSeguidos = 0;
         
         // MOTOR DE PRESENCIA DINÁMICO
-        let registrosPresenciaAmigos = {}; // Guarda timestamps de la última señal recibida por cada usuario
+        let registrosPresenciaAmigos = {}; 
         
-        let notificacionesPendientes = {};
+        // NOTIFICACIONES SIN LEER PERSISTENTES
+        let notificacionesPendientes = JSON.parse(localStorage.getItem("wasapedro_notif_pendientes")) || {};
         let temaActual = localStorage.getItem("wasapedro_theme_color") || "#3a9cd6";
 
         let esAdmin = localStorage.getItem("wasapedro_is_admin") === "true";
         let reportesRecibidos = JSON.parse(localStorage.getItem("wasapedro_reportes")) || [];
         const CONTRASENA_ADMIN_MASTER = "wasapedro123";
 
-        // CONFIGURACIÓN DE RED CERTIFICADA MUNDIAL
         const URL_SERVIDOR_MESSENGER = 'wss://broker.emqx.io:8084/mqtt';
 
         const clienteValidacion = mqtt.connect(URL_SERVIDOR_MESSENGER);
@@ -375,6 +375,7 @@
                 
                 renderizarMisAvatars();
                 actualizarListaBloqueadosUI();
+                actualizarBuzonNotificacionesUI();
                 aplicarColorTema(temaActual);
                 conectarServidorCloud();
                 inicializarEventosArrastrarArchivos();
@@ -493,14 +494,14 @@
             if(!listaAmigosActivos.includes(idGrupo)) listaAmigosActivos.push(idGrupo);
             localStorage.setItem("wasapedro_amigos_list", JSON.stringify(listaAmigosActivos));
             if (clienteMqtt && clienteMqtt.connected) {
-                clienteMqtt.subscribe(`wasapedro/v3/grupo/${idGrupo}`);
+                clienteMqtt.subscribe(`wasapedro/v3/grupo/${idGrupo}`, { qos: 1 });
             }
             moverChatAlPrincipio(idGrupo);
             cerrarModalGrupo();
             abrirChat(idGrupo);
         }
 
-        // MOTOR CENTRAL DE COMUNICACIÓN
+        // MOTOR CENTRAL DE COMUNICACIÓN (SESIÓN PERSISTENTE ACTIVADA)
         function conectarServidorCloud() {
             if (clienteMqtt) {
                 try { clienteMqtt.end(true); } catch(e){}
@@ -508,10 +509,10 @@
             actualizarPildoraConexion("conectando");
 
             clienteMqtt = mqtt.connect(URL_SERVIDOR_MESSENGER, { 
-                clientId: "wp_cl_" + miNombre + "_" + Math.floor(Math.random() * 100000),
+                clientId: "wasapedro_sess_" + miNombre, // Identificador estático para que el servidor te recuerde
                 reconnectPeriod: 3000, 
                 connectTimeout: 10000,
-                clean: true
+                clean: false // ¡CLAVE! Falso le indica al servidor que retenga los mensajes mientras estás fuera
             });
 
             clienteMqtt.on('error', (err) => {
@@ -530,12 +531,14 @@
                 reintentosMqttSeguidos = 0;
                 actualizarPildoraConexion("conectado");
                 
-                clienteMqtt.subscribe(`wasapedro/v3/chat/${miNombre}`);
-                clienteMqtt.subscribe(`wasapedro/v3/sistema/bans`); 
-                clienteMqtt.subscribe(`wasapedro/v3/status/fotos`); 
-                clienteMqtt.subscribe(`wasapedro/v3/status/presencia`); // Canal de presencia global
+                // Suscripciones críticas con QoS 1 para asegurar la entrega offline
+                clienteMqtt.subscribe(`wasapedro/v3/chat/${miNombre}`, { qos: 1 });
+                clienteMqtt.subscribe(`wasapedro/v3/sistema/bans`, { qos: 1 }); 
                 
-                Object.keys(datosGrupos).forEach(id => clienteMqtt.subscribe(`wasapedro/v3/grupo/${id}`));
+                clienteMqtt.subscribe(`wasapedro/v3/status/fotos`); 
+                clienteMqtt.subscribe(`wasapedro/v3/status/presencia`); 
+                
+                Object.keys(datosGrupos).forEach(id => clienteMqtt.subscribe(`wasapedro/v3/grupo/${id}`, { qos: 1 }));
                 if (esAdmin) { clienteMqtt.subscribe(`wasapedro/v3/sistema/reportes`); }
 
                 if (miFotoB64) {
@@ -550,10 +553,9 @@
                 try {
                     const data = JSON.parse(mensaje.toString());
 
-                    // Procesar canal de presencia
                     if (topico === `wasapedro/v3/status/presencia`) {
                         if (data.usuario && data.usuario !== miNombre) {
-                            registrosPresenciaAmigos[data.usuario] = Date.now(); // Guardar el momento exacto del pulso
+                            registrosPresenciaAmigos[data.usuario] = Date.now(); 
                             actualizarListaAmigosUI();
                             if (chatActivo === data.usuario) renderizarFotoCabeceraChat(chatActivo);
                         }
@@ -617,21 +619,21 @@
                     if (chatActivo === idChat) {
                         renderizarMensajes();
                     } else {
+                        // Incrementar y persistir las alertas pendientes en LocalStorage
                         notificacionesPendientes[idChat] = (notificacionesPendientes[idChat] || 0) + 1;
+                        localStorage.setItem("wasapedro_notif_pendientes", JSON.stringify(notificacionesPendientes));
                         actualizarBuzonNotificacionesUI();
                     }
                 } catch(e){}
             });
         }
 
-        // Bucle emisor de Pulsos de Presencia (Cada 10 segundos)
         setInterval(() => {
             if (clienteMqtt && clienteMqtt.connected && miNombre) {
                 clienteMqtt.publish(`wasapedro/v3/status/presencia`, JSON.stringify({ usuario: miNombre }));
             }
         }, 10000);
 
-        // Bucle calculador del color del Punto de Conexión (Cada 4 segundos)
         setInterval(() => {
             actualizarListaAmigosUI();
             if (chatActivo && !datosGrupos[chatActivo]) renderizarFotoCabeceraChat(chatActivo);
@@ -640,12 +642,12 @@
         function calcularEstadoAmigo(usuario) {
             if (datosGrupos[usuario]) return 'grupo';
             const ultimaVez = registrosPresenciaAmigos[usuario];
-            if (!ultimaVez) return 'desconectado'; // Rojo por defecto si nunca mandó pulso
+            if (!ultimaVez) return 'desconectado'; 
             
             const tiempoTranscurrido = Date.now() - ultimaVez;
-            if (tiempoTranscurrido < 15000) return 'conectado';   // Verde (pulso fresco menor a 15s)
-            if (tiempoTranscurrido < 28000) return 'conectando';  // Amarillo (perdiendo señal o inestable)
-            return 'desconectado';                                // Rojo (Desconectado/Offline)
+            if (tiempoTranscurrido < 15000) return 'conectado';   
+            if (tiempoTranscurrido < 28000) return 'conectando';  
+            return 'desconectado';                                
         }
 
         function procesarColaDeEnvios() {
@@ -690,6 +692,7 @@
         function abrirChat(id) {
             chatActivo = id;
             delete notificacionesPendientes[id];
+            localStorage.setItem("wasapedro_notif_pendientes", JSON.stringify(notificacionesPendientes));
             actualizarBuzonNotificacionesUI();
 
             document.getElementById("pantalla-chat-vacia").classList.add("hidden");
@@ -739,7 +742,6 @@
                     txtAvatar.classList.remove("hidden");
                 }
                 
-                // Configurar el punto de color en cabecera
                 dotCabecera.classList.remove("hidden", "bg-green-500", "bg-yellow-500", "bg-red-500", "pulso-estado");
                 let estado = calcularEstadoAmigo(id);
                 if (estado === 'conectado') dotCabecera.classList.add("bg-green-500");
@@ -835,7 +837,6 @@
                 const tieneFoto = fotosAmigos[id];
                 const div = document.createElement("div");
                 
-                // Determinar clase del Punto de Presencia
                 let estado = calcularEstadoAmigo(id);
                 let dotHtml = '';
                 if (!esGrupo) {
